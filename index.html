@@ -1,0 +1,976 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="description" content="최근 전쟁 현황, 무기별 효과, 전쟁의 변화와 역사를 정리한 전쟁 분석 사이트"><style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}[hidden]{display:none!important}img{max-width:100%}</style></head><body><title>WarLens</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+KR:wght@400;500;700&display=swap">
+<style>
+/* Layout: sticky briefing bar with tabs; one column of sections, max 1080px; cards only for conflicts and stat tiles */
+:root{
+  --bg:#F1F2EE; --surface:#FFFFFF; --ink:#18202B; --muted:#5B6470; --line:#D6D9D1; --soft:#E7E9E3;
+  --il:#2F5D7C; --ua:#B4622A; --crit:#B3261E; --warn:#9A6200; --good:#2E7D4F;
+  --f-display:"Black Han Sans","IBM Plex Sans KR",system-ui,sans-serif;
+  --f-body:"IBM Plex Sans KR","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#12161B; --surface:#1A2027; --ink:#E6E9EC; --muted:#9AA3AD; --line:#2E3640; --soft:#222932;
+  --il:#7FB0D6; --ua:#E39A62; --crit:#F07167; --warn:#E0B04A; --good:#6CC48F; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#12161B; --surface:#1A2027; --ink:#E6E9EC; --muted:#9AA3AD; --line:#2E3640; --soft:#222932;
+  --il:#7FB0D6; --ua:#E39A62; --crit:#F07167; --warn:#E0B04A; --good:#6CC48F; color-scheme:dark}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.6;margin:0}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--surface)}
+a{color:var(--il)}
+.wrap{max-width:1080px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+header.bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--surface);border-bottom:1px solid var(--line)}
+.bar .wrap{display:flex;align-items:center;gap:20px;flex-wrap:wrap;padding-block:10px}
+.logo{font-family:var(--f-display);font-size:22px;letter-spacing:.02em;line-height:1}
+.logo span{color:var(--crit)}
+nav{display:flex;gap:4px;flex-wrap:wrap}
+nav button{font:inherit;font-size:14px;border:0;background:none;color:var(--muted);padding:6px 12px;border-radius:6px;cursor:pointer}
+nav button:hover{background:var(--soft);color:var(--ink)}
+nav button[aria-selected="true"]{background:var(--ink);color:var(--surface);font-weight:500}
+nav button:focus-visible,.chip-btn:focus-visible{outline:2px solid var(--il);outline-offset:2px}
+.asof{margin-left:auto;font-family:var(--f-mono);font-size:12px;color:var(--muted)}
+.notice{background:var(--soft);border-bottom:1px solid var(--line);font-size:13px;color:var(--muted)}
+.notice .wrap{padding-block:8px}
+main{padding-block:28px 64px}
+section.view{display:grid;gap:28px}
+h1{font-size:28px;line-height:1.3;margin:0;text-wrap:balance}
+h2{font-size:19px;margin:0 0 4px;text-wrap:balance}
+h3{font-size:15px;margin:0}
+.lead{color:var(--muted);max-width:68ch;margin:6px 0 0}
+.eyebrow{font-family:var(--f-mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.grid3{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:18px;display:grid;gap:12px;align-content:start;min-width:0}
+.status{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:500;padding:2px 10px;border-radius:999px;border:1px solid currentColor;width:max-content}
+.status::before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor}
+.s-crit{color:var(--crit)} .s-warn{color:var(--warn)} .s-good{color:var(--good)}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;font-size:13px;margin:0}
+.kv dt{color:var(--muted)} .kv dd{margin:0;font-variant-numeric:tabular-nums}
+.tl{list-style:none;margin:0;padding:0;display:grid;gap:8px;font-size:13px}
+.tl li{display:grid;grid-template-columns:86px 1fr;gap:10px}
+.tl time{font-family:var(--f-mono);font-size:12px;color:var(--muted);padding-top:1px}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:20px;display:grid;gap:14px;min-width:0}
+.panel-head{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:baseline}
+.legend{display:flex;gap:14px;font-size:12px;color:var(--muted);flex-wrap:wrap}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:6px;vertical-align:-1px}
+.chart{overflow-x:auto}
+.chart svg{display:block;width:100%;height:auto;min-width:520px}
+.chart text{font-family:var(--f-body);fill:var(--ink)}
+.chart .m{fill:var(--muted)} .chart .grid{stroke:var(--line)} .chart .num{font-family:var(--f-mono)}
+.src{font-size:12px;color:var(--muted);margin:0}
+.src a{color:var(--muted)}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+.tile{border:1px solid var(--line);border-radius:8px;padding:14px;display:grid;gap:4px;min-width:0}
+.tile .big{font-family:var(--f-mono);font-size:26px;font-weight:500;line-height:1.2;font-variant-numeric:tabular-nums}
+.tile .big small{font-size:14px;color:var(--muted);font-weight:400}
+.tile p{margin:0;font-size:13px;color:var(--muted)}
+.tabs2{display:flex;gap:8px;flex-wrap:wrap}
+.chip-btn{font:inherit;font-size:13px;border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:6px 14px;border-radius:999px;cursor:pointer}
+.chip-btn[aria-pressed="true"]{border-color:var(--ink);background:var(--ink);color:var(--surface)}
+.tbl-wrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:13px;min-width:560px}
+th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-weight:500;color:var(--muted);font-size:12px}
+td.n{font-family:var(--f-mono);font-variant-numeric:tabular-nums;white-space:nowrap}
+.tag{font-size:11px;padding:1px 6px;border-radius:4px;background:var(--soft);color:var(--muted);white-space:nowrap}
+.fc{display:grid;gap:10px}
+.prob{display:flex;align-items:center;gap:12px}
+.prob .track{flex:1;height:10px;border-radius:5px;background:var(--soft);overflow:hidden}
+.prob .fill{height:100%;background:var(--il)}
+.prob b{font-family:var(--f-mono);font-size:20px;min-width:52px;text-align:right}
+.sample{font-size:11px;font-weight:500;color:var(--warn);border:1px dashed var(--warn);padding:1px 8px;border-radius:4px;width:max-content}
+.seg{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:8px}
+.seg-btn{font:inherit;text-align:left;display:grid;gap:2px;border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:10px 14px;border-radius:8px;cursor:pointer}
+.seg-btn span{font-family:var(--f-mono);font-size:12px;color:var(--muted)}
+.seg-btn:hover{border-color:var(--muted)}
+.seg-btn[aria-pressed="true"]{border-color:var(--ink);box-shadow:inset 0 0 0 1px var(--ink)}
+.seg-btn:focus-visible{outline:2px solid var(--il);outline-offset:2px}
+.chip-btn:disabled{opacity:.4;cursor:not-allowed}
+.war-head{display:grid;gap:4px;border-left:3px solid var(--ink);padding-left:12px}
+.empty{text-align:left}
+.two .chart svg{min-width:0}
+.two>.tiles{align-content:start}
+.tl-wide li{grid-template-columns:110px 1fr}
+table.vs{min-width:0}
+.vs th:first-child{width:28%}
+.vs .cell{display:grid;gap:4px}
+.vs .val{font-family:var(--f-mono);font-variant-numeric:tabular-nums;font-size:13px}
+.vs .vb{height:6px;border-radius:3px;min-width:2px}
+.vs .note{font-size:11px;color:var(--muted)}
+.bg-sum{margin:0;font-size:13px;line-height:1.6;padding:10px 12px;background:var(--soft);border-radius:6px}
+.bg-sum b{font-weight:700;margin-right:6px}
+.eras{list-style:none;margin:0;padding:0;display:grid;gap:0;border-left:2px solid var(--line);margin-left:6px}
+.eras li{display:grid;grid-template-columns:108px 1fr;gap:14px;padding:10px 0 10px 18px;position:relative}
+.eras li::before{content:"";position:absolute;left:-7px;top:16px;width:12px;height:12px;border-radius:50%;background:var(--surface);border:2px solid var(--muted)}
+.eras li.hl::before{background:var(--crit);border-color:var(--crit)}
+.eras .era-y{font-family:var(--f-mono);font-size:13px;color:var(--muted);padding-top:2px}
+.eras h3{font-size:15px;margin-bottom:2px}
+.eras p{margin:0;font-size:13px;color:var(--muted);max-width:70ch}
+@media (max-width:520px){.eras li{grid-template-columns:1fr;gap:2px}}
+.watch{margin:0;padding-left:18px;display:grid;gap:8px;font-size:14px}
+.watch b{font-weight:500;margin-right:6px}
+.stack{display:grid;gap:28px}
+#c-ev-pgm svg{max-width:640px}
+.h-search{display:grid;gap:10px}
+.h-row{display:flex;gap:8px}
+#h-q{flex:1;min-width:0;font:inherit;font-size:16px;padding:12px 14px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink)}
+#h-q:focus-visible{outline:2px solid var(--il);outline-offset:1px}
+.h-layout{display:grid;grid-template-columns:minmax(0,300px) minmax(0,1fr);gap:16px;align-items:start}
+@media (max-width:820px){.h-layout{grid-template-columns:1fr}.h-list{max-height:320px}}
+.h-list-wrap{display:grid;gap:8px;min-width:0}
+.h-list{list-style:none;margin:0;padding:0;display:grid;gap:4px;max-height:720px;overflow-y:auto}
+.h-item{width:100%;text-align:left;font:inherit;display:grid;gap:2px;padding:10px 12px;border:1px solid transparent;border-radius:8px;background:none;color:var(--ink);cursor:pointer}
+.h-item span{font-size:12px;color:var(--muted)}
+.h-item:hover{background:var(--soft)}
+.h-item[aria-current="true"]{background:var(--surface);border-color:var(--ink)}
+.h-item:focus-visible,.btn:focus-visible{outline:2px solid var(--il);outline-offset:2px}
+.h-ai{border:1px dashed var(--line);border-radius:8px;padding:14px;display:grid;gap:8px}
+.h-ai p{margin:0}
+.btn{font:inherit;font-size:14px;font-weight:500;border:0;border-radius:8px;padding:10px 16px;background:var(--ink);color:var(--surface);cursor:pointer;width:max-content}
+.btn:disabled{opacity:.5;cursor:wait}
+.h-detail{gap:18px}
+.h-head{display:grid;gap:4px}
+.h-head h2{font-size:24px;margin:0}
+.h-en{margin:0;color:var(--muted);font-size:13px}
+.h-sides{display:grid;grid-template-columns:1fr auto 1fr;gap:12px;align-items:center;background:var(--soft);border-radius:8px;padding:12px 14px}
+.h-sides div{display:grid;gap:2px}
+.h-sides b{font-weight:500;font-size:14px}
+.h-vs{font-family:var(--f-display);font-size:18px;color:var(--crit)}
+@media (max-width:520px){.h-sides{grid-template-columns:1fr}.h-vs{justify-self:start}}
+.h-grid{display:grid;grid-template-columns:1fr;gap:18px;max-width:72ch}
+.h-grid section{display:grid;gap:6px;align-content:start}
+.h-grid h3,.h-sig h3{font-size:14px;letter-spacing:.02em}
+.h-grid ul,.h-grid ol{margin:0;padding-left:18px;display:grid;gap:6px;font-size:14px}
+.h-sig{border-left:3px solid var(--crit);padding-left:12px;display:grid;gap:4px}
+.h-sig p{margin:0;font-size:14px}
+.db-status{display:inline-block;margin-right:8px;padding:1px 8px;border-radius:999px;border:1px solid currentColor;font-size:11px}
+.war-rows{display:grid;gap:16px}
+.war-row{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,6fr);gap:16px;align-items:start}
+@media (max-width:820px){.war-row{grid-template-columns:1fr}}
+.mil h3{font-size:14px}
+.bg-more summary{cursor:pointer;font-size:13px;color:var(--il);font-weight:500}
+.bg-more summary:focus-visible{outline:2px solid var(--il);outline-offset:2px}
+.bg-more .tl{margin-top:10px}
+.bg-more .src{margin-top:8px}
+.vs-grid{display:grid;grid-template-columns:1fr;gap:24px}
+.vs-grid>div{display:grid;gap:8px;align-content:start;min-width:0}
+.vs-grid h3{font-size:14px}
+
+.two{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px}
+footer{border-top:1px solid var(--line);color:var(--muted);font-size:12px}
+footer .wrap{padding-block:20px}
+@media (max-width:520px){h1{font-size:23px}.asof{margin-left:0}}
+@media (prefers-reduced-motion:no-preference){.prob .fill{transition:width .6s ease}}
+</style>
+
+<header class="bar">
+  <div class="wrap">
+    <div class="logo">WAR<span>LENS</span></div>
+    <nav role="tablist" aria-label="페이지">
+      <button role="tab" id="t-overview" data-view="overview">대시보드</button>
+      <button role="tab" id="t-weapons" data-view="weapons">무기별 효과</button>
+      <button role="tab" id="t-evolution" data-view="evolution">전쟁의 변화</button>
+      <button role="tab" id="t-history" data-view="history">전쟁의 역사</button>
+      <button role="tab" id="t-sources" data-view="sources">출처·방법</button>
+    </nav>
+    <div class="asof">기준일 2026-10-26</div>
+  </div>
+</header>
+<div class="notice"><div class="wrap">미리보기 버전입니다. 수치는 공개 보도·연구기관 자료이며, 교전 당사국 발표는 검증되지 않은 주장으로 표시했습니다.</div></div>
+
+<main class="wrap">
+
+<!-- OVERVIEW -->
+<section class="view" id="overview" role="tabpanel" aria-labelledby="t-overview">
+  <div>
+    <div class="eyebrow">분쟁 대시보드</div>
+    <h1>방공 요격탄이 바닥나는 두 전선, 우크라이나와 중동</h1>
+    <p class="lead">2026년 들어 우크라이나가 받은 요격미사일은 2025년의 3분의 1로 줄었고, 8월 5일 공습에서는 탄도미사일 24발 중 한 발도 막지 못했습니다. 같은 시기 이스라엘은 이란 탄도미사일의 약 90%를 요격했습니다.</p>
+  </div>
+
+  <div class="war-rows">
+  <div class="war-row">
+    <article class="card">
+      <span class="status s-crit">고강도 교전</span>
+      <h2>러시아–우크라이나 전쟁</h2>
+      <p class="bg-sum"><b>배경</b> 2014년 크림반도 합병과 돈바스 전쟁 이후, 러시아가 우크라이나의 NATO 가입 금지를 요구하다 2022년 전면 침공. 현재 우크라이나 영토 약 20%를 점령, 평화협상은 교착.</p>
+      <dl class="kv">
+        <dt>개시</dt><dd>2022-02-24</dd>
+        <dt>샤헤드형 드론</dt><dd>54,538기 발사 (2025년)</dd>
+        <dt>러 포탄 사용</dt><dd>하루 약 27,000발 (2025.7)</dd>
+        <dt>탄도탄 요격률</dt><dd>약 24% (2022.9–2025.10 누적)</dd>
+      </dl>
+      <ul class="tl">
+        <li><time>2026-08-05</time><span>탄도미사일 24발·지르콘 4발 중 요격 0발</span></li>
+        <li><time>2026-07</time><span>키이우에 평균 3일마다 공습</span></li>
+        <li><time>2026 상반기</time><span>요격미사일 공급 2025년의 1/3 수준</span></li>
+      </ul>
+
+      <details class="bg-more"><summary>배경 자세히</summary><ul class="tl tl-wide"><li><time>2014.2–3</time><span>러시아군이 크림반도를 점령하고 합병. 유엔총회는 합병을 인정하지 않음</span></li><li><time>2014.4</time><span>돈바스에서 친러 무장세력이 도네츠크·루한스크 “인민공화국” 선포, 돈바스 전쟁 시작. 민스크 협정(2014·2015)은 휴전에 실패</span></li><li><time>2021.3–12</time><span>러시아가 국경과 벨라루스에 병력 집결. 12월 우크라이나의 NATO 가입 영구 금지를 요구</span></li><li><time>2022.2.24</time><span>“비무장화·탈나치화”를 명분으로 전면 침공. 키이우 점령 실패 후 4월 북부에서 철수</span></li><li><time>2026</time><span>러시아가 우크라이나 영토의 약 20%를 점령. 포크로우스크 등을 장악했으나 평화협상은 교착</span></li></ul><p class="src">출처: <a href="https://en.wikipedia.org/wiki/Russian_invasion_of_Ukraine" target="_blank" rel="noopener">Russian invasion of Ukraine</a></p></details>
+    </article>
+    <div class="card mil">
+      <h3>러시아–우크라이나 군사력</h3>
+      <div class="tbl-wrap"><table class="vs" id="vsd-ru"></table></div>
+    </div>
+  </div>
+  <div class="war-row">
+    <article class="card">
+      <span class="status s-warn">휴전 붕괴 · 저강도 교전</span>
+      <h2>이란 전쟁 (미국·이스라엘–이란)</h2>
+      <p class="bg-sum"><b>배경</b> 2025년 6월 12일 전쟁 뒤 미국이 핵·탄도미사일 폐기를 요구. 반정부 시위 유혈 진압과 핵협상 결렬 끝에 미국·이스라엘이 공습, 하메네이 사망. 이란은 호르무즈 해협 봉쇄로 맞섬.</p>
+      <dl class="kv">
+        <dt>개시</dt><dd>2026-02-28</dd>
+        <dt>이스라엘 향 탄도탄</dt><dd>약 650발 (40일간)</dd>
+        <dt>집속탄두 비중</dt><dd>절반 이상</dd>
+        <dt>일일 발사량</dt><dd>약 90발 → 10–15발</dd>
+      </dl>
+      <ul class="tl">
+        <li><time>2026-07-08</time><span>휴전 붕괴, 교전 재개</span></li>
+        <li><time>2026-06-17</time><span>이슬라마바드 각서, 60일 협상 기간</span></li>
+        <li><time>2026-04-08</time><span>파키스탄 중재 휴전 발효</span></li>
+      </ul>
+
+      <details class="bg-more"><summary>배경 자세히</summary><ul class="tl tl-wide"><li><time>2025.6</time><span>이스라엘·이란 ‘12일 전쟁’. 미국이 이란 핵시설을 공습</span></li><li><time>2025.10</time><span>미국이 이란에 핵·탄도미사일 프로그램 폐기를 요구</span></li><li><time>2025.12–2026.1</time><span>이란 전국 반정부 시위와 유혈 진압. 사망자 추정 3,117명(이란 정부)–43,000명(인권단체)</span></li><li><time>2026.1–2</time><span>미국이 항모 링컨·포드 전개. 무스카트·제네바 등에서 간접 핵협상 3차례</span></li><li><time>2026.2.28</time><span>협상 결렬 후 미국·이스라엘 공습 개시, 최고지도자 하메네이 사망</span></li><li><time>2026.3.1</time><span>이란이 호르무즈 해협 봉쇄. 4.8 휴전 → 7.8 붕괴, 9월 기준 교전 지속</span></li></ul><p class="src">출처: <a href="https://en.wikipedia.org/wiki/Prelude_to_the_2026_Iran_war" target="_blank" rel="noopener">Prelude to the 2026 Iran war</a> · <a href="https://en.wikipedia.org/wiki/2026_Iran_war" target="_blank" rel="noopener">2026 Iran war</a></p></details>
+    </article>
+    <div class="card mil">
+      <h3>이스라엘·미국–이란 군사력</h3>
+      <div class="tbl-wrap"><table class="vs" id="vsd-ir"></table></div>
+    </div>
+  </div>
+  <div class="war-row">
+    <article class="card">
+      <span class="status s-warn">장기화</span>
+      <h2>이스라엘–하마스·헤즈볼라</h2>
+      <p class="bg-sum"><b>배경</b> 2007년부터 가자를 장악한 하마스가 2023년 10월 7일 기습해 약 1,200명이 숨지고 약 250명이 인질로 끌려감. 헤즈볼라도 레바논에서 로켓 공격에 가세.</p>
+      <dl class="kv">
+        <dt>개시</dt><dd>2023-10-07</dd>
+        <dt>발사된 로켓</dt><dd>약 40,000발 (2026.5 기준)</dd>
+        <dt>아이언돔 요격률</dt><dd>98–99% (제조사 회장 주장)</dd>
+      </dl>
+      <ul class="tl">
+        <li><time>2026-05-11</time><span>라파엘 회장 “요격미사일 부족 없다”</span></li>
+        <li><time>2023-10-07</time><span>하마스 기습, 개전</span></li>
+      </ul>
+
+      <details class="bg-more"><summary>배경 자세히</summary><ul class="tl tl-wide"><li><time>1987</time><span>1차 인티파다 중 무슬림형제단 팔레스타인 지부에서 하마스 창설. PLO의 평화 협상에 반대</span></li><li><time>2007</time><span>하마스가 가자지구를 장악</span></li><li><time>2023.10.7</time><span>하마스 주도 기습으로 약 1,200명 사망, 약 250명 인질</span></li><li><time>2023.10–</time><span>헤즈볼라도 레바논에서 로켓 공격. 2026년 5월까지 하마스와 합쳐 약 4만 발</span></li></ul><p class="src">출처: <a href="https://www.congress.gov/crs_external_products/IF/PDF/IF12549/IF12549.6.pdf" target="_blank" rel="noopener">CRS 2024.8</a> · <a href="https://iranprimer.usip.org/node/13081" target="_blank" rel="noopener">USIP Iran Primer</a> · <a href="https://www.al-monitor.com/originals/2026/05/iron-dome-nearly-99-effective-against-incoming-missiles-maker-rafaels-chairman" target="_blank" rel="noopener">Al-Monitor 2026.5</a></p></details>
+    </article>
+    <div class="card mil">
+      <h3>이스라엘–하마스·헤즈볼라 전력</h3>
+      <div class="tbl-wrap"><table class="vs" id="vsd-hm"></table></div>
+    </div>
+  </div>
+  </div>
+    <p class="src">군사력 국방비는 SIPRI 2025년 기준, 막대는 같은 전쟁 안에서의 상대 크기. 우크라이나는 서방 무기 지원이 별도이고, 미국은 전 세계 전력 기준이며, 이란은 공식 예산 기준입니다. 출처: <a href="https://www.sipri.org/sites/default/files/2026-04/2604_milex_2025.pdf" target="_blank" rel="noopener">SIPRI 2026.4</a> · <a href="https://migflug.com/jetflights/wp-content/uploads/sites/4/2026/08/active-military-personnel-top-15-2026.html" target="_blank" rel="noopener">병력 집계 (IISS·DMDC)</a> · <a href="https://www.al-monitor.com/originals/2025/05/israel-plans-gaza-conquest-how-strong-its-army" target="_blank" rel="noopener">Al-Monitor (IISS)</a> · <a href="https://www.congress.gov/crs_external_products/IF/PDF/IF12549/IF12549.6.pdf" target="_blank" rel="noopener">CRS</a> · <a href="https://iranprimer.usip.org/node/13081" target="_blank" rel="noopener">USIP</a></p>
+
+  <div class="panel">
+    <div class="panel-head">
+      <div><h2>이번 주 무기 지표 요약</h2><p class="src">자세한 내용은 ‘무기별 효과’ 탭</p></div>
+    </div>
+    <div class="tiles">
+      <div class="tile"><span class="eyebrow">방공</span><div class="big">86–90<small>%</small></div><p>이스라엘의 이란 탄도탄 요격률 (2025.6 / 2026.2–4)</p></div>
+      <div class="tile"><span class="eyebrow">드론</span><div class="big">최대 75<small>%</small></div><p>러시아군 사상자 중 드론에 의한 비율 추정</p></div>
+      <div class="tile"><span class="eyebrow">정밀유도</span><div class="big">70→6<small>%</small></div><p>전자전 이후 엑스칼리버 포탄 유효율</p></div>
+      <div class="tile"><span class="eyebrow">기갑</span><div class="big">4,000<small>대+</small></div><p>영상으로 확인된 러시아 전차 손실 (Oryx, 2025.5)</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- WEAPONS -->
+<section class="view" id="weapons" role="tabpanel" aria-labelledby="t-weapons" hidden>
+  <div>
+    <div class="eyebrow">무기별 효과</div>
+    <h1>전쟁별 무기 효과</h1>
+    <p class="lead">전쟁을 고른 뒤 무기 분류로 좁혀 보세요. 요격률, 명중률, 사상자 비중처럼 척도가 서로 다르므로 각 수치 옆에 기간과 발표 주체를 적었습니다.</p>
+  </div>
+
+  <div class="seg" role="group" aria-label="전쟁 선택">
+    <button class="seg-btn" id="war-ru" data-war="ru" aria-pressed="true"><b>러시아–우크라이나</b><span>2022.2–</span></button>
+    <button class="seg-btn" id="war-ir" data-war="ir" aria-pressed="false"><b>이스라엘·미국–이란</b><span>2025.6 · 2026.2–</span></button>
+    <button class="seg-btn" id="war-hm" data-war="hm" aria-pressed="false"><b>이스라엘–하마스·헤즈볼라</b><span>2023.10–</span></button>
+    <button class="seg-btn" id="war-cmp" data-war="cmp" aria-pressed="false"><b>전쟁 간 비교</b><span>방공 요격률</span></button>
+  </div>
+
+  <div class="tabs2" role="group" aria-label="무기 분류" id="cat-chips">
+    <button class="chip-btn" id="w-all" data-w="all" aria-pressed="true">전체</button>
+    <button class="chip-btn" id="w-ad" data-w="ad" aria-pressed="false">방공·요격</button>
+    <button class="chip-btn" id="w-dr" data-w="dr" aria-pressed="false">드론</button>
+    <button class="chip-btn" id="w-ar" data-w="ar" aria-pressed="false">포병·정밀유도</button>
+    <button class="chip-btn" id="w-ms" data-w="ms" aria-pressed="false">미사일·기갑</button>
+  </div>
+
+  <!-- ===== Russia–Ukraine ===== -->
+  <div class="war-head" data-war="ru">
+    <h2>러시아–우크라이나: 요격탄은 줄고, 드론과 포탄은 대량으로 쏟아진다</h2>
+    <p class="src">우크라이나가 막는 쪽 수치는 우크라이나 공군, 러시아가 입은 손실 수치는 주로 우크라이나 측·OSINT 자료입니다.</p>
+  </div>
+
+  <div class="panel" data-war="ru" data-cat="ad">
+    <div class="panel-head">
+      <div><h2>방공·요격: 우크라이나의 탄도미사일 요격률</h2><p class="src">이스칸데르·KN-23 등, 기간별 요격 비율</p></div>
+    </div>
+    <div class="two">
+      <div class="chart" id="c-ru-ad"></div>
+      <div class="tiles">
+        <div class="tile"><span class="eyebrow">누적 요격률</span><div class="big">24<small>%</small></div><p>2022.9–2025.10 이스칸데르·킨잘 939발 중 227발 (RUSI)</p></div>
+        <div class="tile"><span class="eyebrow">요격미사일 공급</span><div class="big">1/3<small> 수준</small></div><p>2026년 상반기, 2025년 대비 (젤렌스키, 2026.8)</p></div>
+      </div>
+    </div>
+    <p class="src">패트리어트가 없는 지역을 노린 공격도 포함되어 체계 자체의 성능만 반영한 수치는 아닙니다. 출처: <a href="https://www.rusi.org/explore-our-research/publications/commentary/iskander-improved-russian-missile-tests-ukraines-air-defence" target="_blank" rel="noopener">RUSI 2025.11</a> · <a href="https://www.internazionale.it/ultime-notizie-reuters/2026/08/05/ukraine-says-missile-interceptor-deliveries-have-fallen-to-third-of-2025-level" target="_blank" rel="noopener">Reuters 2026.8</a></p>
+  </div>
+
+  <div class="two" data-war="ru" data-cat="dr">
+    <div class="panel">
+      <div><h2>드론: 샤헤드형 2025년 분기별 발사량</h2><p class="src">러시아 → 우크라이나, 단위: 기</p></div>
+      <div class="chart" id="c-shahed"></div>
+      <p class="src">명중률은 1–2월 약 2–3%에서 4월 이후 11.5–18.7%로 올랐고, 12월은 17.3%(공격형만 28.2%)였습니다. 출처: <a href="https://isis-online.org/isis-reports/a-comprehensive-analytical-review-of-russian-shahed-type-uavs-deployment-against-ukraine-in-2025" target="_blank" rel="noopener">ISIS (Anokhin), 2026.1</a>, 우크라이나 공군 자료 기반</p>
+    </div>
+    <div class="panel">
+      <div><h2>드론: 러시아군 부상 원인</h2><p class="src">출처마다 기준이 달라 합산하지 않음</p></div>
+      <div class="tiles">
+        <div class="tile"><span class="eyebrow">드론 (FPV 등)</span><div class="big">70–75<small>%</small></div><p>최대치 추정. 러시아군 교범 인용 70%, Inside Stories 75%</p></div>
+        <div class="tile"><span class="eyebrow">포병</span><div class="big">약 20<small>%</small></div><p>러 국방부 군의학저널, 부상자 6,000여 명 분석</p></div>
+        <div class="tile"><span class="eyebrow">소화기</span><div class="big">4<small>%</small></div><p>같은 군의학저널 연구</p></div>
+      </div>
+      <p class="src">출처: <a href="https://www.kyivpost.com/post/49712" target="_blank" rel="noopener">Kyiv Post 2025.3</a> · <a href="https://militaeraktuell.at/en/russia-70-percent-of-losses-due-to-fpv-drones/" target="_blank" rel="noopener">Militär Aktuell 2025.1</a></p>
+    </div>
+  </div>
+
+  <div class="two" data-war="ru" data-cat="ar">
+    <div class="panel">
+      <div><h2>포병: 러시아는 줄고 우크라이나는 유지</h2><p class="src">하루 포탄 사용량, 단위: 발</p></div>
+      <div class="legend"><span><i style="background:var(--crit)"></i>러시아</span><span><i style="background:var(--ua)"></i>우크라이나 (비율로 환산)</span></div>
+      <div class="chart" id="c-shell"></div>
+      <p class="src">우크라이나 수치는 발표된 비율(1:3, 1:1.8)로 계산한 값입니다. 출처: <a href="https://news.liga.net/en/politics/news/russians-use-27-000-artillery-shells-every-day-a-year-ago-it-was-one-and-a-half-times-more" target="_blank" rel="noopener">LIGA.net 2025.7</a> (우크라이나군 발표)</p>
+    </div>
+    <div class="panel">
+      <div><h2>정밀유도무기와 활공폭탄</h2><p class="src">GPS 유도 무기는 전자전에 크게 약해졌다</p></div>
+      <div class="tiles">
+        <div class="tile"><span class="eyebrow">엑스칼리버 포탄</span><div class="big">70→6<small>%</small></div><p>러시아 전자전 이후 유효율 (허드슨연구소, 2024.3 의회 증언)</p></div>
+        <div class="tile"><span class="eyebrow">러 활공폭탄 KAB</span><div class="big">109→130<small>/일</small></div><p>2024년 약 4만 발, 2025년 1–11월 약 4.4만 발</p></div>
+        <div class="tile"><span class="eyebrow">KAB 요격</span><div class="big">약 100<small>발</small></div><p>2025년 9–11월 요격 수 (우크라 총참모부)</p></div>
+      </div>
+      <p class="src">GMLRS·GLSDB·JDAM도 전자전으로 빗나간 사례가 보고됐습니다. 출처: <a href="https://www.defenseone.com/threats/2024/04/another-us-precision-guided-weapon-falls-prey-russian-electronic-warfare-us-says/396141/" target="_blank" rel="noopener">Defense One 2024.4</a> · <a href="https://euromaidanpress.com/2025/12/02/russia-drops-84000-guided-bombs-on-ukraine-in-two-years/" target="_blank" rel="noopener">Euromaidan Press 2025.12</a></p>
+    </div>
+  </div>
+
+  <div class="two" data-war="ru" data-cat="ms">
+    <div class="panel">
+      <div><h2>기갑: 러시아 전차 손실, 검증 수치와 주장 수치</h2><p class="src">단위: 대</p></div>
+      <div class="chart" id="c-tank"></div>
+      <p class="src">Oryx는 사진·영상으로 확인된 손실만 세므로 실제보다 적고, 총참모부 수치는 교전 당사국 발표입니다. 출처: <a href="https://united24media.com/es/latest-news/rusia-ha-perdido-mas-de-4000-tanques-en-ucrania-confirma-oryx-con-evidencia-visual-8746" target="_blank" rel="noopener">United24 (Oryx) 2025.5</a> · <a href="https://www.fair.org.ua/en/statystyka-vtrat-voroha-shcho-pokazuiut-tsyfry-henshtabu-zsu-stanom-na-lito-2026-roku/" target="_blank" rel="noopener">FAIR (총참모부) 2026.7</a></p>
+    </div>
+    <div class="panel">
+      <div><h2>미사일: 러시아의 탄도미사일 공격</h2><p class="src">우크라이나 방공을 뚫는 주된 수단</p></div>
+      <div class="tiles">
+        <div class="tile"><span class="eyebrow">발사 능력 추정</span><div class="big">약 100<small>발/월</small></div><p>탄도미사일 (Beskrestnov, 2026.8)</p></div>
+        <div class="tile"><span class="eyebrow">2026.8.5 공습</span><div class="big">0<small> / 24</small></div><p>탄도미사일 요격 수, 지르콘 4발도 요격 못함</p></div>
+        <div class="tile"><span class="eyebrow">키이우 공습 빈도</span><div class="big">3<small>일마다</small></div><p>2026년 7월 평균</p></div>
+      </div>
+      <p class="src">출처: <a href="https://www.internazionale.it/ultime-notizie-reuters/2026/08/05/ukraine-says-missile-interceptor-deliveries-have-fallen-to-third-of-2025-level" target="_blank" rel="noopener">Reuters 2026.8</a></p>
+    </div>
+  </div>
+
+  <!-- ===== Iran war ===== -->
+  <div class="war-head" data-war="ir" hidden>
+    <h2>이스라엘·미국–이란: 요격률은 90% 안팎, 집속탄두가 관통 피해를 키웠다</h2>
+    <p class="src">2025년 6월 ‘12일 전쟁’과 2026년 2월 28일 시작된 전쟁(4월 8일 휴전, 7월 8일 붕괴)을 함께 봅니다. 요격률 대부분은 이스라엘 측 발표입니다.</p>
+  </div>
+
+  <div class="panel" data-war="ir" data-cat="ad" hidden>
+    <div class="panel-head">
+      <div><h2>방공·요격: 이스라엘의 위협별 요격률</h2><p class="src">아이언돔·다비드 슬링·애로우와 미국 THAAD·이지스 포함</p></div>
+    </div>
+    <div class="chart" id="c-ir-ad"></div>
+    <p class="src">JINSA 85%는 인구 밀집지·기지 등을 위협한 미사일 중 요격 273발, 피격 49발 기준이며 요격탄의 약 70%가 미국산이었습니다. 2026년 90%는 650발 중 66발 관통을 바탕으로 한 추산입니다. 출처: <a href="https://www.calcalistech.com/ctechnews/article/r1z2xjzbge" target="_blank" rel="noopener">CTech 2025.7</a> · <a href="https://jinsa.org/press-release-operation-rising-lion-exposes-strain-on-u-s-israel-air-defenses/" target="_blank" rel="noopener">JINSA 2025.8</a> · <a href="https://en.wikipedia.org/wiki/2026_Iranian_strikes_on_Israel" target="_blank" rel="noopener">2026 Iranian strikes on Israel</a></p>
+  </div>
+
+  <div class="panel" data-war="ir" data-cat="dr" hidden>
+    <div><h2>드론: 이란 드론은 거의 모두 막혔다</h2><p class="src">전투기·헬기·아이언돔·전자전으로 대응</p></div>
+    <div class="tiles">
+      <div class="tile"><span class="eyebrow">2025.6 발사</span><div class="big">약 1,000<small>기</small></div><p>이스라엘을 향한 이란 무인기</p></div>
+      <div class="tile"><span class="eyebrow">2025.6 요격률</span><div class="big">99<small>%</small></div><p>이스라엘 국방당국 발표</p></div>
+      <div class="tile"><span class="eyebrow">2026 일일 발사</span><div class="big">720→60<small>기</small></div><p>개전일 대비 10일째, 모든 표적 합계 (JPost)</p></div>
+    </div>
+    <p class="src">출처: <a href="https://www.calcalistech.com/ctechnews/article/r1z2xjzbge" target="_blank" rel="noopener">CTech 2025.7</a> · <a href="https://en.wikipedia.org/wiki/2026_Iranian_strikes_on_Israel" target="_blank" rel="noopener">2026 Iranian strikes on Israel</a></p>
+  </div>
+
+  <div class="panel" data-war="ir" data-cat="ms" hidden>
+    <div><h2>미사일: 2026년 전쟁은 더 길었지만 하루 발사량은 적었다</h2><p class="src">이란 → 이스라엘 탄도미사일</p></div>
+    <div class="two">
+      <div class="chart" id="c-ir-ms"></div>
+      <div class="tiles">
+        <div class="tile"><span class="eyebrow">집속탄두 비중</span><div class="big">절반<small> 이상</small></div><p>2026년 650발 중</p></div>
+        <div class="tile"><span class="eyebrow">이스라엘 사망자</span><div class="big">24<small>명</small></div><p>2026년 40일간, 10명은 자탄에 의해 (ToI 집계)</p></div>
+        <div class="tile"><span class="eyebrow">하루 발사량</span><div class="big">90→10–15<small>발</small></div><p>2026년 개전일 대비 3월 말</p></div>
+      </div>
+    </div>
+    <p class="src">하루 평균은 총 발사 수를 기간으로 나눈 값입니다(2025년 약 550발/12일, 2026년 약 650발/40일). 출처: <a href="https://www.calcalistech.com/ctechnews/article/r1z2xjzbge" target="_blank" rel="noopener">CTech 2025.7</a> · <a href="https://en.wikipedia.org/wiki/2026_Iranian_strikes_on_Israel" target="_blank" rel="noopener">2026 Iranian strikes on Israel</a></p>
+  </div>
+
+  <!-- ===== Israel–Hamas/Hezbollah ===== -->
+  <div class="war-head" data-war="hm" hidden>
+    <h2>이스라엘–하마스·헤즈볼라: 로켓 약 4만 발, 아이언돔이 대부분을 막았다는 주장</h2>
+    <p class="src">공개된 무기 효과 수치가 적은 전쟁입니다. 검증된 자료를 확보하는 대로 추가합니다.</p>
+  </div>
+
+  <div class="panel" data-war="hm" data-cat="ad" hidden>
+    <div><h2>방공·요격: 아이언돔</h2><p class="src">2023.10.7 이후 하마스·헤즈볼라 로켓</p></div>
+    <div class="tiles">
+      <div class="tile"><span class="eyebrow">발사된 로켓</span><div class="big">약 40,000<small>발</small></div><p>2023.10 – 2026.5</p></div>
+      <div class="tile"><span class="eyebrow">요격률 (주장)</span><div class="big">98–99<small>%</small></div><p>제조사 라파엘 회장 발언, 독립 검증 없음</p></div>
+    </div>
+    <p class="src">출처: <a href="https://www.al-monitor.com/originals/2026/05/iron-dome-nearly-99-effective-against-incoming-missiles-maker-rafaels-chairman" target="_blank" rel="noopener">Al-Monitor/Reuters 2026.5</a></p>
+  </div>
+
+  <!-- ===== Comparison ===== -->
+  <div class="war-head" data-war="cmp" hidden>
+    <h2>같은 탄도미사일이라도 이스라엘은 90% 가까이, 우크라이나는 4분의 1만 막았다</h2>
+    <p class="src">이스라엘은 다층 방공과 미국 요격 자산의 지원을 받았고, 우크라이나는 요격탄 공급이 줄어든 상태에서 넓은 국토를 방어합니다.</p>
+  </div>
+  <div class="panel" data-war="cmp" data-cat="ad" hidden>
+    <div class="panel-head">
+      <div><h2>전쟁별 방공 요격률</h2><p class="src">막대 = 발사된 위협 중 요격 비율</p></div>
+      <div class="legend"><span><i style="background:var(--il)"></i>이스라엘 (이란 전쟁·하마스)</span><span><i style="background:var(--ua)"></i>우크라이나</span></div>
+    </div>
+    <div class="chart" id="c-ad"></div>
+    <p class="src">흐린 막대는 제조사 주장입니다. 출처는 각 전쟁 탭에 있습니다.</p>
+  </div>
+
+  <div class="panel empty" id="w-empty" hidden>
+    <h2>이 전쟁에서는 해당 분류의 공개 수치를 아직 확보하지 못했습니다</h2>
+    <p class="src">다른 분류를 고르거나 ‘전체’를 눌러 보세요.</p>
+  </div>
+</section>
+
+<!-- EVOLUTION -->
+<section class="view" id="evolution" role="tabpanel" aria-labelledby="t-evolution" hidden>
+  <div>
+    <div class="eyebrow">전쟁의 변화 · WarLens 분석</div>
+    <h1>값비싼 정밀무기에서 값싼 대량무기로, 전쟁은 다시 소모전이 됐다</h1>
+    <p class="lead">걸프전 이후 30년 동안 전쟁은 적은 수의 비싼 정밀무기로 빨리 끝내는 방향으로 발전했습니다. 2022년 이후의 전쟁에서는 수백만 대의 값싼 드론과 하루 수만 발의 포탄, 바닥나는 요격미사일이 승패를 가르고 있습니다.</p>
+  </div>
+
+  <div class="panel">
+    <div><h2>시대별 전쟁 양상</h2><p class="src">각 시대를 대표하는 무기와 싸우는 방식</p></div>
+    <ol class="eras">
+      <li><span class="era-y">1914–1918</span><div><h3>1차 세계대전 · 포병과 참호</h3><p>기관총과 참호로 방어가 공격보다 유리해졌고, 포탄이 전장 사상자의 60%를 냈습니다.</p></div></li>
+      <li><span class="era-y">1939–1945</span><div><h3>2차 세계대전 · 기갑과 항공의 기동전</h3><p>전차와 항공기를 묶어 참호선을 돌파했고, 도시와 공장을 노린 전략폭격이 등장했습니다.</p></div></li>
+      <li><span class="era-y">1945–1991</span><div><h3>냉전 · 핵 억제와 대리전</h3><p>강대국끼리의 전면전은 핵무기로 억제되었고, 전쟁은 한국·베트남·중동 등지의 국지전과 대리전으로 나타났습니다.</p></div></li>
+      <li class="hl"><span class="era-y">1991</span><div><h3>걸프전 · 정밀유도무기의 등장</h3><p>GPS·레이저 유도, 스텔스기, 위성 정찰이 결합했습니다. 다만 미군이 투하한 폭탄·미사일 중 유도무기는 6.5%에 그쳤습니다.</p></div></li>
+      <li><span class="era-y">2001–2021</span><div><h3>대테러전 · 정밀타격과 무인기</h3><p>2003년 이라크전에서는 유도무기 비중이 68%로 늘었습니다. 무장 무인기가 비정규 무장세력을 표적 공습했습니다.</p></div></li>
+      <li><span class="era-y">2014</span><div><h3>하이브리드전 · 크림반도 합병</h3><p>표식 없는 군대, 정보전, 친러 무장세력을 앞세워 전면전 선언 없이 영토를 점령했습니다.</p></div></li>
+      <li class="hl"><span class="era-y">2022–</span><div><h3>러시아–우크라이나 · 대량 소모전의 귀환</h3><p>FPV 드론과 전자전이 전장을 지배하고, 포탄 소비와 무기 생산량이 다시 승패의 핵심이 됐습니다.</p></div></li>
+      <li class="hl"><span class="era-y">2025–2026</span><div><h3>이란 전쟁 · 미사일과 요격탄의 대결</h3><p>탄도미사일 수백 발과 드론 수천 기가 다층 방공망과 맞붙었고, 지도부 제거 공습과 해협 봉쇄가 함께 쓰였습니다.</p></div></li>
+    </ol>
+    <p class="src">출처: <a href="https://www.theworldwar.org/learn/wwi/artillery" target="_blank" rel="noopener">국립 1차대전 박물관</a> · <a href="https://www.comw.org/pda/fulltext/0309bm30.pdf" target="_blank" rel="noopener">Conetta, PDA 2003.9</a> · <a href="https://en.wikipedia.org/wiki/Russian_invasion_of_Ukraine" target="_blank" rel="noopener">Russian invasion of Ukraine</a> · <a href="https://en.wikipedia.org/wiki/2026_Iran_war" target="_blank" rel="noopener">2026 Iran war</a></p>
+  </div>
+
+  <div class="stack">
+    <div class="panel">
+      <div><h2>병사를 가장 많이 다치게 하는 무기가 바뀌었다</h2><p class="src">사상자 중 해당 무기에 의한 비율</p></div>
+      <div class="chart" id="c-ev-kill"></div>
+      <p class="src">100년 동안 전장의 주된 살상 수단은 포병이었지만, 우크라이나에서는 드론이 그 자리를 넘겨받았습니다. 시대마다 집계 기준이 달라 대략적인 비교로만 보세요. 출처: <a href="https://www.theworldwar.org/learn/wwi/artillery" target="_blank" rel="noopener">국립 1차대전 박물관</a> · <a href="https://www.kyivpost.com/post/49712" target="_blank" rel="noopener">Kyiv Post 2025.3</a></p>
+    </div>
+    <div class="panel">
+      <div><h2>정밀유도무기는 늘었지만 전자전 앞에서 흔들린다</h2><p class="src">왼쪽 두 막대: 미군 투하 탄약 중 유도무기 비중 · 오른쪽: 엑스칼리버 포탄 유효율</p></div>
+      <div class="chart" id="c-ev-pgm"></div>
+      <p class="src">걸프전 6.5%에서 이라크전 68%로 늘어난 정밀유도무기는 GPS 교란이 일상화된 우크라이나에서 유효율이 70%에서 6%로 떨어졌습니다. 출처: <a href="https://www.comw.org/pda/fulltext/0309bm30.pdf" target="_blank" rel="noopener">Conetta, PDA 2003.9</a> · <a href="https://www.defenseone.com/threats/2024/04/another-us-precision-guided-weapon-falls-prey-russian-electronic-warfare-us-says/396141/" target="_blank" rel="noopener">Defense One 2024.4</a></p>
+    </div>
+  </div>
+
+  <div class="stack">
+    <div class="panel">
+      <div><h2>공격은 싸고 방어는 비싸다</h2><p class="src">1발(1기)당 단가, 단위: 달러</p></div>
+      <div class="chart" id="c-ev-cost"></div>
+      <p class="src">PAC-3 요격미사일 한 발 값이면 샤헤드 드론 약 86기를 만들 수 있습니다. 다만 샤헤드는 약 90%가 요격되거나 목표에 닿지 못해, 실제 타격 1건당 비용은 약 35만 달러로 추산됩니다. 출처: <a href="https://www.csis.org/analysis/calculating-cost-effectiveness-russias-drone-strikes" target="_blank" rel="noopener">CSIS 2025.2</a></p>
+    </div>
+    <div class="panel">
+      <div><h2>무기는 다시 ‘몇 개’가 아니라 ‘몇백만 개’로 센다</h2><p class="src">2025년 기준 연간 규모</p></div>
+      <div class="tiles">
+        <div class="tile"><span class="eyebrow">우크라이나 FPV 드론</span><div class="big">약 300<small>만 대</small></div><p>2025년 전력화 예상, 전년의 약 2.5배</p></div>
+        <div class="tile"><span class="eyebrow">무인 지상차량</span><div class="big">약 1.5<small>만 대</small></div><p>2025년 우크라이나군 인수</p></div>
+        <div class="tile"><span class="eyebrow">러시아 샤헤드형</span><div class="big">54,538<small>기</small></div><p>2025년 우크라이나로 발사</p></div>
+        <div class="tile"><span class="eyebrow">러시아 포탄</span><div class="big">27,000<small>발/일</small></div><p>2025년 7월, 1년 전 44,000발</p></div>
+      </div>
+      <p class="src">출처: <a href="https://euromaidanpress.com/2025/12/24/battlefield-math-is-changing-in-ukraine-kyivs-drone-output-surged-2-5-fold-in-2025" target="_blank" rel="noopener">Euromaidan Press 2025.12</a> · <a href="https://isis-online.org/isis-reports/a-comprehensive-analytical-review-of-russian-shahed-type-uavs-deployment-against-ukraine-in-2025" target="_blank" rel="noopener">ISIS 2026.1</a> · <a href="https://news.liga.net/en/politics/news/russians-use-27-000-artillery-shells-every-day-a-year-ago-it-was-one-and-a-half-times-more" target="_blank" rel="noopener">LIGA.net 2025.7</a></p>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div><h2>지금 전쟁에서 보이는 다섯 가지 변화</h2><p class="src">이전 시대와 비교한 WarLens 분석. 근거는 이 사이트의 다른 탭 수치</p></div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>변화</th><th>이전</th><th>지금</th><th>근거</th></tr></thead>
+        <tbody>
+          <tr><td><b>값싼 대량 무기</b></td><td>소수의 고가 정밀무기로 핵심 표적 타격</td><td>수만~수백만 대의 저가 드론으로 물량 공세</td><td>우크라 FPV 약 300만 대, 샤헤드 5.4만 기 (2025)</td></tr>
+          <tr><td><b>전자전의 일상화</b></td><td>GPS 유도는 믿을 수 있는 기본값</td><td>교란·기만으로 정밀무기 유효율 급락, 드론도 주파수 싸움</td><td>엑스칼리버 70% → 6%</td></tr>
+          <tr><td><b>방공 소모전</b></td><td>제공권 장악 후 방공 위협 제거</td><td>요격탄 재고와 생산 속도가 도시 방어를 좌우</td><td>우크라 요격탄 공급 1/3, 탄도탄 24발 중 요격 0발 (2026.8)</td></tr>
+          <tr><td><b>산업 동원력의 귀환</b></td><td>짧은 전쟁, 비축분으로 충분</td><td>포탄·드론을 몇 년간 대량 생산할 수 있는 나라가 버팀</td><td>러시아 포탄 하루 2.7만~4.4만 발</td></tr>
+          <tr><td><b>장거리 타격과 경제전</b></td><td>전선 중심의 군사 표적 공격</td><td>지도부 제거, 에너지 시설 공습, 해협 봉쇄로 후방과 경제를 압박</td><td>하메네이 사망, 호르무즈 봉쇄 (2026)</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-head"><h2>앞으로 볼 지표</h2><span class="tag">WarLens 분석</span></div>
+    <ul class="watch">
+      <li><b>요격 비용을 낮추는 수단</b> 수백만 달러짜리 요격미사일 대신 값싼 요격 드론·레이저가 얼마나 빨리 보급되는가</li>
+      <li><b>생산 능력 경쟁</b> 러시아·우크라이나·서방의 포탄과 드론, 요격탄 생산량 추이</li>
+      <li><b>전자전과 자율화</b> 교란을 견디는 유도·항법 기술과 조종사 없이 움직이는 드론의 확산</li>
+      <li><b>무인 지상·해상 체계</b> 보급·후송·정찰을 맡는 무인 차량과 무인 수상정의 비중</li>
+    </ul>
+    <p class="src">이 지표들이 바뀌는 방향이 다음 전쟁의 양상을 결정할 것으로 봅니다.</p>
+  </div>
+</section>
+
+<!-- HISTORY -->
+<section class="view" id="history" role="tabpanel" aria-labelledby="t-history" hidden>
+  <div>
+    <div class="eyebrow">전쟁의 역사</div>
+    <h1>과거의 전쟁 찾아보기</h1>
+    <p class="lead">전쟁 이름, 나라, 인물로 검색하면 배경과 경과, 결과, 전쟁사에서의 의미를 볼 수 있습니다. 목록에 없는 전쟁은 Claude에게 물어볼 수 있습니다.</p>
+  </div>
+
+  <div class="h-search">
+    <label for="h-q" class="eyebrow">전쟁 검색</label>
+    <div class="h-row">
+      <input id="h-q" type="search" placeholder="예: 한국전쟁, 나폴레옹, 이순신, 중동전쟁" autocomplete="off">
+    </div>
+    <div class="tabs2" role="group" aria-label="시대" id="h-eras"></div>
+  </div>
+
+  <div class="h-layout">
+    <div class="h-list-wrap">
+      <p class="src" id="h-count"></p>
+      <ul class="h-list" id="h-list"></ul>
+      <div class="h-ai" id="h-ai" hidden>
+        <p>목록에 <b id="h-ai-q"></b>이(가) 없습니다.</p>
+        <button class="btn" id="h-ai-btn" type="button">Claude에게 찾아보기</button>
+        <p class="src" id="h-ai-note">답변은 이 페이지를 보는 사람의 Claude 사용량을 씁니다.</p>
+        <p class="src" id="h-ai-off">다른 이름이나 영어 이름으로 검색해 보세요.</p>
+      </div>
+    </div>
+    <article class="panel h-detail" id="h-detail" aria-live="polite"></article>
+  </div>
+</section>
+
+<!-- SOURCES -->
+<section class="view" id="sources" role="tabpanel" aria-labelledby="t-sources" hidden>
+  <div>
+    <div class="eyebrow">출처·방법</div>
+    <h1>수치 출처와 읽는 법</h1>
+    <p class="lead">요격률은 발표 주체에 따라 분모(전체 발사 수, 위협이 된 미사일 수)가 다릅니다. 같은 사건이라도 수치가 다르면 둘 다 표시하고 기준을 밝힙니다.</p>
+  </div>
+  <div class="panel">
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>지표</th><th>값</th><th>기간</th><th>발표 주체</th><th>출처</th></tr></thead>
+        <tbody id="src-rows"></tbody>
+      </table>
+    </div>
+  </div>
+</section>
+</main>
+
+<footer><div class="wrap"><span id="db-status" class="db-status" hidden></span> WarLens 미리보기 · 본 사이트의 분석과 예측은 참고용이며 사실 확인이나 작전 판단의 근거가 아닙니다. 비공개 군사정보는 다루지 않습니다.</div></footer>
+
+<script>
+(function(){
+  const NS='http://www.w3.org/2000/svg';
+  const el=(t,a,txt)=>{const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);if(txt!=null)e.textContent=txt;return e;};
+  const fmt=n=>n.toLocaleString('ko-KR');
+
+  // Horizontal bar chart (percent)
+  function hbar(id,rows){
+    const W=760,L=300,R=56,rowH=34,top=14,H=top+rows.length*rowH+30,x=v=>L+(W-L-R)*v/100;
+    const s=el('svg',{viewBox:`0 0 ${W} ${H}`,role:'img','aria-label':'위협별 요격률 막대그래프'});
+    [0,25,50,75,100].forEach(t=>{s.append(el('line',{x1:x(t),x2:x(t),y1:top-4,y2:H-26,class:'grid'}));s.append(el('text',{x:x(t),y:H-8,'text-anchor':'middle','font-size':12,class:'m num'},t+'%'));});
+    rows.forEach((r,i)=>{const y=top+i*rowH;
+      s.append(el('text',{x:L-12,y:y+14,'text-anchor':'end','font-size':13},r.label));
+      s.append(el('text',{x:L-12,y:y+28,'text-anchor':'end','font-size':11,class:'m'},r.sub));
+      const w=Math.max(x(r.v)-L,2);
+      s.append(el('rect',{x:L,y:y+6,width:w,height:18,rx:3,style:`fill:var(${r.c});fill-opacity:${r.claim?0.45:1}`}));
+      s.append(el('text',{x:L+w+8,y:y+20,'font-size':13,'font-weight':500,class:'num'},(r.pre||(r.approx?'약 ':''))+r.v+'%'));
+    });
+    document.getElementById(id).append(s);
+  }
+  hbar('c-ir-ad',[
+    {label:'이란 드론',sub:'2025.6 · 약 1,000기 · 이스라엘 국방당국',v:99,c:'--il'},
+    {label:'이란 탄도미사일',sub:'2026.2–4 · 650발 중 66발 관통 (추산)',v:90,c:'--il',approx:true},
+    {label:'이란 탄도미사일',sub:'2025.6 · 약 550발 · 이스라엘 국방당국',v:86,c:'--il'},
+    {label:'이란 탄도미사일 (위협 대상만)',sub:'2025.6 · 요격 273 / 피격 49 · JINSA',v:85,c:'--il'}
+  ]);
+  hbar('c-ad',[
+    {label:'이스라엘 vs 이란 드론',sub:'2025.6 · 약 1,000기 · 이스라엘 국방당국',v:99,c:'--il'},
+    {label:'아이언돔 vs 하마스·헤즈볼라 로켓',sub:'2023.10–2026.5 · 제조사 회장 주장',v:98,c:'--il',claim:true},
+    {label:'이스라엘 vs 이란 탄도탄',sub:'2026.2–4 · 650발 중 66발 관통 (추산)',v:90,c:'--il',approx:true},
+    {label:'이스라엘 vs 이란 탄도탄',sub:'2025.6 · 약 550발 · 이스라엘 국방당국',v:86,c:'--il'},
+    {label:'우크라이나 vs 탄도탄',sub:'2025.6–9 · 179발 중 67발 · RUSI',v:37,c:'--ua'},
+    {label:'우크라이나 vs 이스칸데르·킨잘',sub:'2022.9–2025.10 누적 · 939발 중 227발',v:24,c:'--ua'},
+    {label:'우크라이나 vs 탄도탄',sub:'2025.1–여름 · 128발 중 20발 · RUSI',v:15,c:'--ua'},
+    {label:'우크라이나 vs 탄도탄',sub:'2026.8.5 공습 · 24발 중 0발',v:0,c:'--ua'}
+  ]);
+
+  // Vertical bars with values
+  function vbar(id,rows,opt){
+    const W=520,H=280,L=56,R=16,top=28,bot=54,max=opt.max,y=v=>top+(H-top-bot)*(1-v/max);
+    const bw=opt.bw||56, step=(W-L-R)/rows.length;
+    const s=el('svg',{viewBox:`0 0 ${W} ${H}`,role:'img','aria-label':opt.aria});
+    opt.ticks.forEach(t=>{s.append(el('line',{x1:L,x2:W-R,y1:y(t),y2:y(t),class:'grid'}));s.append(el('text',{x:L-8,y:y(t)+4,'text-anchor':'end','font-size':11,class:'m num'},fmt(t)+(opt.unit==='%'?'%':'')));});
+    rows.forEach((r,i)=>{const cx=L+step*i+step/2;
+      (r.bars||[r]).forEach((b,j,arr)=>{const n=arr.length,bx=cx-(n*bw+(n-1)*6)/2+j*(bw+6);
+        s.append(el('rect',{x:bx,y:y(b.v),width:bw,height:y(0)-y(b.v),rx:3,style:`fill:var(${b.c})`}));
+        s.append(el('text',{x:bx+bw/2,y:y(b.v)-7,'text-anchor':'middle','font-size':12,'font-weight':500,class:'num'},(b.approx?'≈':'')+fmt(b.v)+(opt.unit==='%'?'%':'')));});
+      s.append(el('text',{x:cx,y:H-bot+20,'text-anchor':'middle','font-size':13},r.label));
+      if(r.sub)s.append(el('text',{x:cx,y:H-bot+38,'text-anchor':'middle','font-size':11,class:'m'},r.sub));
+    });
+    document.getElementById(id).append(s);
+  }
+  vbar('c-shahed',[
+    {label:'1분기',v:10731,c:'--crit'},{label:'2분기',v:11863,c:'--crit'},
+    {label:'3분기',v:16068,c:'--crit',sub:'7월 6,297기 최다'},{label:'4분기',v:15876,c:'--crit'}
+  ],{max:20000,ticks:[0,5000,10000,15000,20000],aria:'2025년 분기별 샤헤드형 드론 발사량'});
+  vbar('c-ru-ad',[
+    {label:'2025.1–여름',sub:'20 / 128발',v:15,c:'--ua'},
+    {label:'2025.6–9',sub:'67 / 179발',v:37,c:'--ua'},
+    {label:'2025.10.1–24',sub:'14 / 78발',v:17,c:'--ua'},
+    {label:'2026.8.5',sub:'0 / 24발',v:0,c:'--ua'}
+  ],{max:50,ticks:[0,10,20,30,40,50],bw:48,unit:'%',aria:'우크라이나 기간별 탄도미사일 요격률'});
+  vbar('c-ir-ms',[
+    {label:'2025년 6월',sub:'약 550발 · 12일',v:46,c:'--il',approx:true},
+    {label:'2026년 2–4월',sub:'약 650발 · 40일',v:16,c:'--il',approx:true}
+  ],{max:60,ticks:[0,20,40,60],bw:72,unit:'발/일',aria:'이란 탄도미사일 하루 평균 발사량'});
+  vbar('c-shell',[
+    {label:'2024년 8월',sub:'비율 1 : 3',bars:[{v:44000,c:'--crit'},{v:14700,c:'--ua',approx:true}]},
+    {label:'2025년 7월',sub:'비율 1 : 1.8',bars:[{v:27000,c:'--crit'},{v:15000,c:'--ua',approx:true}]}
+  ],{max:50000,ticks:[0,10000,20000,30000,40000,50000],bw:64,aria:'러시아와 우크라이나 하루 포탄 사용량'});
+  vbar('c-tank',[
+    {label:'Oryx 영상 확인',sub:'2025년 5월 · 4,000대 이상',v:4000,c:'--il'},
+    {label:'우크라 총참모부 주장',sub:'2026년 7월 30일',v:12230,c:'--muted'}
+  ],{max:14000,ticks:[0,4000,8000,12000],bw:90,aria:'러시아 전차 손실 비교'});
+
+  // Sources table
+  const S=[
+    ['이란 드론 요격률 (이스라엘)','99%','2025.6','이스라엘 국방당국','https://www.calcalistech.com/ctechnews/article/r1z2xjzbge','CTech'],
+    ['이란 탄도탄 요격률 (이스라엘)','86%','2025.6','이스라엘 국방당국','https://www.calcalistech.com/ctechnews/article/r1z2xjzbge','CTech'],
+    ['위협 탄도탄 요격 / 피격','273 / 49 (85%)','2025.6','JINSA','https://jinsa.org/press-release-operation-rising-lion-exposes-strain-on-u-s-israel-air-defenses/','JINSA'],
+    ['이란 탄도탄 발사 (이스라엘 향)','약 650발','2026.2.28–4.8','IDF·Times of Israel 집계','https://en.wikipedia.org/wiki/2026_Iranian_strikes_on_Israel','Wikipedia'],
+    ['아이언돔 요격률','98–99%','2023.10–2026.5','라파엘 회장 (제조사)','https://www.al-monitor.com/originals/2026/05/iron-dome-nearly-99-effective-against-incoming-missiles-maker-rafaels-chairman','Al-Monitor'],
+    ['이스칸데르·킨잘 요격률 (우크라)','24% (227/939)','2022.9–2025.10','RUSI (Ivaniuk 데이터)','https://www.rusi.org/explore-our-research/publications/commentary/iskander-improved-russian-missile-tests-ukraines-air-defence','RUSI'],
+    ['탄도탄 요격 (우크라)','0 / 24','2026.8.5','우크라이나 공군','https://www.internazionale.it/ultime-notizie-reuters/2026/08/05/ukraine-says-missile-interceptor-deliveries-have-fallen-to-third-of-2025-level','Reuters'],
+    ['샤헤드형 드론 발사','54,538기','2025','우크라 공군 / ISIS 분석','https://isis-online.org/isis-reports/a-comprehensive-analytical-review-of-russian-shahed-type-uavs-deployment-against-ukraine-in-2025','ISIS'],
+    ['드론에 의한 러군 사상 비중','최대 70–75%','2025','러 교범·Inside Stories','https://www.kyivpost.com/post/49712','Kyiv Post'],
+    ['엑스칼리버 유효율','70% → 6%','2024.3','허드슨연구소 의회 증언','https://www.defenseone.com/threats/2024/04/another-us-precision-guided-weapon-falls-prey-russian-electronic-warfare-us-says/396141/','Defense One'],
+    ['러시아 포탄 사용','27,000발/일','2025.7','우크라이나군','https://news.liga.net/en/politics/news/russians-use-27-000-artillery-shells-every-day-a-year-ago-it-was-one-and-a-half-times-more','LIGA.net'],
+    ['러 활공폭탄 투하','약 84,000발','2024–2025.11','우크라 국방부','https://euromaidanpress.com/2025/12/02/russia-drops-84000-guided-bombs-on-ukraine-in-two-years/','Euromaidan Press'],
+    ['러 전차 손실 (영상 확인)','4,000대+','~2025.5','Oryx','https://united24media.com/es/latest-news/rusia-ha-perdido-mas-de-4000-tanques-en-ucrania-confirma-oryx-con-evidencia-visual-8746','United24'],
+    ['러 전차 손실 (주장)','12,230대','~2026.7.30','우크라 총참모부','https://www.fair.org.ua/en/statystyka-vtrat-voroha-shcho-pokazuiut-tsyfry-henshtabu-zsu-stanom-na-lito-2026-roku/','FAIR'],
+    ['국방비 2025 (미·러·우·이스라엘·이란)','$954B / 190B / 84.1B / 48.3B / 7.4B','2025','SIPRI','https://www.sipri.org/sites/default/files/2026-04/2604_milex_2025.pdf','SIPRI'],
+    ['이스라엘 현역·예비군','169,500 / 465,000','2025','IISS','https://www.al-monitor.com/originals/2025/05/israel-plans-gaza-conquest-how-strong-its-army','Al-Monitor'],
+    ['하마스 병력','약 25,000명','2024','CRS','https://www.congress.gov/crs_external_products/IF/PDF/IF12549/IF12549.6.pdf','CRS'],
+    ['헤즈볼라 로켓·미사일','75,000–200,000발','2024','Alma 등 추정','https://iranprimer.usip.org/node/13081','USIP'],
+    ['1차 대전 포병 사상 비중','60%','1914–1918','국립 1차대전 박물관','https://www.theworldwar.org/learn/wwi/artillery','theworldwar.org'],
+    ['미군 유도무기 비중','6.5% → 68%','1991 / 2003','Conetta (PDA)','https://www.comw.org/pda/fulltext/0309bm30.pdf','PDA'],
+    ['샤헤드·요격미사일 단가','$35k / $1M+ / $3M+','2025.2','CSIS','https://www.csis.org/analysis/calculating-cost-effectiveness-russias-drone-strikes','CSIS'],
+    ['우크라 FPV 드론 전력화','약 300만 대','2025','우크라 국방부','https://euromaidanpress.com/2025/12/24/battlefield-math-is-changing-in-ukraine-kyivs-drone-output-surged-2-5-fold-in-2025','Euromaidan Press'],
+    ['전쟁의 역사 탭','28개 전쟁 요약','기원전 431–2024','일반 역사 자료 (각 항목에 위키백과 링크)','https://en.wikipedia.org/wiki/List_of_wars_by_death_toll','Wikipedia'],
+    ['이란 전쟁 휴전 경과','4.8 휴전 → 7.8 붕괴','2026','—','https://en.wikipedia.org/wiki/2026_Iran_war_ceasefire','Wikipedia']
+  ];
+  const tb=document.getElementById('src-rows');
+  S.forEach(r=>{const tr=document.createElement('tr');
+    tr.innerHTML=`<td>${r[0]}</td><td class="n">${r[1]}</td><td class="n">${r[2]}</td><td>${r[3]}</td><td><a href="${r[4]}" target="_blank" rel="noopener">${r[5]}</a></td>`;tb.append(tr);});
+
+  // Evolution charts
+  hbar('c-ev-kill',[
+    {label:'1차 세계대전 · 포병',sub:'1914–1918 · 전장 사상자 기준',v:60,c:'--muted'},
+    {label:'러시아–우크라이나 · 포병',sub:'2025 · 러시아군 부상자 기준',v:20,c:'--ua',approx:true},
+    {label:'러시아–우크라이나 · 드론',sub:'2025 · 러시아군 사상자, 최대 추정',v:75,c:'--crit',pre:'최대 '}
+  ]);
+  vbar('c-ev-pgm',[
+    {label:'걸프전 1991',sub:'유도무기 비중',v:6.5,c:'--il'},
+    {label:'이라크전 2003',sub:'유도무기 비중',v:68,c:'--il'},
+    {label:'엑스칼리버',sub:'전자전 이전',v:70,c:'--crit'},
+    {label:'엑스칼리버',sub:'전자전 이후',v:6,c:'--crit'}
+  ],{max:100,ticks:[0,25,50,75,100],bw:48,unit:'%',aria:'정밀유도무기 비중과 엑스칼리버 유효율'});
+  (function(){
+    const rows=[{label:'샤헤드형 드론',sub:'CSIS 추정 단가',v:35000,c:'--crit',t:'$35,000'},
+      {label:'NASAMS 요격미사일',sub:'AIM-9X 계열',v:1000000,c:'--il',t:'$100만 이상'},
+      {label:'패트리어트 PAC-3',sub:'요격미사일 1발',v:3000000,c:'--il',t:'$300만 이상'}];
+    const W=760,L=230,R=120,rowH=46,top=10,H=top+rows.length*rowH+28,x=v=>L+(W-L-R)*v/3000000;
+    const s=el('svg',{viewBox:`0 0 ${W} ${H}`,role:'img','aria-label':'공격 드론과 요격미사일 단가 비교'});
+    [0,1e6,2e6,3e6].forEach(t=>{s.append(el('line',{x1:x(t),x2:x(t),y1:top,y2:H-24,class:'grid'}));s.append(el('text',{x:x(t),y:H-6,'text-anchor':'middle','font-size':12,class:'m num'},t?('$'+t/1e6+'M'):'0'));});
+    rows.forEach((r,i)=>{const y=top+i*rowH;
+      s.append(el('text',{x:L-12,y:y+18,'text-anchor':'end','font-size':14},r.label));
+      s.append(el('text',{x:L-12,y:y+34,'text-anchor':'end','font-size':12,class:'m'},r.sub));
+      const w=Math.max(x(r.v)-L,3);
+      s.append(el('rect',{x:L,y:y+10,width:w,height:20,rx:3,style:`fill:var(${r.c})`}));
+      s.append(el('text',{x:L+w+8,y:y+25,'font-size':13,'font-weight':500,class:'num'},r.t));});
+    document.getElementById('c-ev-cost').append(s);
+  })();
+
+  // ===== War history =====
+  const WARS=[
+  {id:'peloponnesian',name:'펠로폰네소스 전쟁',en:'Peloponnesian War',alias:['아테네','스파르타'],period:'기원전 431–404',era:'고대·중세',region:'고대 그리스',sides:['아테네와 델로스 동맹','스파르타와 펠로폰네소스 동맹'],
+   bg:['페르시아 전쟁 이후 아테네가 델로스 동맹을 해상 제국으로 키우며 세력을 넓혔습니다.','육상 강국 스파르타와 동맹국들은 아테네의 팽창을 위협으로 느꼈습니다. 투키디데스는 “아테네의 부상이 스파르타에 준 두려움”을 원인으로 꼽았습니다.'],
+   course:['아르키다모스 전쟁(431–421): 스파르타는 아티카를 침공하고 아테네는 해군으로 버텼으나 아테네에 역병이 돌아 페리클레스가 사망했습니다.','니키아스 평화조약(421)으로 잠시 휴전했습니다.','시칠리아 원정(415–413): 아테네의 대규모 원정군이 시라쿠사에서 전멸했습니다.','스파르타가 페르시아의 자금으로 함대를 만들어 아이고스포타모이 해전(405)에서 아테네 함대를 격파했습니다.'],
+   result:['기원전 404년 아테네가 항복하고 성벽을 허물었으며 델로스 동맹이 해체되었습니다.','스파르타의 패권도 오래가지 못했고 그리스 도시국가 전체가 약해져 훗날 마케도니아에 정복됩니다.'],
+   sig:'강대국의 부상과 기존 패권국의 두려움이 전쟁으로 이어진다는 ‘투키디데스의 함정’ 논의의 출발점입니다.',cas:'정확한 집계 없음',wiki:'Peloponnesian_War'},
+  {id:'punic',name:'포에니 전쟁',en:'Punic Wars',alias:['한니발','카르타고','로마'],period:'기원전 264–146',era:'고대·중세',region:'지중해',sides:['로마 공화정','카르타고'],
+   bg:['서지중해 패권을 두고 신흥 육상 강국 로마와 해상 무역 강국 카르타고가 시칠리아에서 충돌했습니다.'],
+   course:['1차(264–241): 로마가 해군을 새로 건설해 해전에서 승리하고 시칠리아를 차지했습니다.','2차(218–201): 한니발이 코끼리를 이끌고 알프스를 넘어 칸나이 전투(216)에서 로마군을 포위 섬멸했습니다.','스키피오가 카르타고 본토를 공격해 자마 전투(202)에서 한니발을 꺾었습니다.','3차(149–146): 로마가 카르타고를 포위해 도시를 파괴했습니다.'],
+   result:['카르타고가 멸망하고 로마가 지중해 전역의 패권을 차지했습니다.'],
+   sig:'칸나이 전투의 양익 포위는 오늘날까지 군사학에서 포위 섬멸전의 교본으로 연구됩니다.',cas:'정확한 집계 없음 (칸나이 한 전투에서 로마군 수만 명 전사)',wiki:'Punic_Wars'},
+  {id:'mongol',name:'몽골의 정복 전쟁',en:'Mongol invasions and conquests',alias:['칭기즈 칸','몽골 제국','고려 몽골'],period:'1206–1294 전후',era:'고대·중세',region:'유라시아 전역',sides:['몽골 제국','중국·중앙아시아·러시아·중동·고려 등'],
+   bg:['1206년 테무진이 몽골 부족을 통일하고 칭기즈 칸으로 즉위했습니다.','기동력이 뛰어난 기병과 엄격한 십진법 군제, 정보망을 바탕으로 주변국 정복에 나섰습니다.'],
+   course:['서하·금나라를 공격하고 호라즘 제국을 멸망시켰습니다(1219–1221).','바투의 서방 원정으로 러시아 공국들을 정복하고 폴란드·헝가리까지 진출했습니다.','1258년 바그다드를 함락해 아바스 왕조를 무너뜨렸습니다.','고려는 1231년부터 약 30년간 여러 차례 침공을 받고 강화도로 천도해 항전했습니다.','쿠빌라이가 1279년 남송을 멸망시켰으나 일본 원정(1274, 1281)은 실패했습니다.'],
+   result:['역사상 가장 넓은 연속 영토를 가진 제국이 성립했다가 4개 칸국 등으로 나뉘었습니다.','동서 교역로가 열렸지만 정복 과정에서 막대한 인명 피해가 났습니다.'],
+   sig:'기병의 기동과 정보·병참을 결합한 원거리 작전의 대표 사례입니다.',cas:'정확한 집계 없음 (수천만 명 추정이 있으나 논란)',wiki:'Mongol_invasions_and_conquests'},
+  {id:'hundred',name:'백년전쟁',en:"Hundred Years' War",alias:['잔 다르크','영국 프랑스'],period:'1337–1453',era:'고대·중세',region:'프랑스',sides:['잉글랜드 왕국','프랑스 왕국'],
+   bg:['잉글랜드 왕 에드워드 3세가 모계 혈통을 근거로 프랑스 왕위를 주장했습니다.','잉글랜드 왕이 가진 프랑스 내 영지와 플랑드르 양모 무역을 둘러싼 이해관계가 얽혔습니다.'],
+   course:['크레시(1346)·푸아티에(1356) 전투에서 잉글랜드 장궁병이 프랑스 기사단을 격파했습니다.','아쟁쿠르 전투(1415)에서 헨리 5세가 다시 대승하고 트루아 조약으로 프랑스 왕위 계승권을 얻었습니다.','1429년 잔 다르크가 오를레앙 포위를 풀고 샤를 7세의 대관식을 이끌었습니다.','프랑스가 대포를 앞세워 노르망디와 가스코뉴를 되찾았습니다.'],
+   result:['잉글랜드는 칼레를 제외한 프랑스 내 영토를 모두 잃었습니다.','양국에서 국민 의식과 왕권이 강해지고 봉건 기사 계급이 쇠퇴했습니다.'],
+   sig:'장궁과 화약 무기가 기사 중심의 중세 전쟁을 끝내는 전환점이 되었습니다.',cas:'정확한 집계 없음',wiki:"Hundred_Years'_War"},
+  {id:'imjin',name:'임진왜란',en:'Imjin War',alias:['정유재란','이순신','도요토미','조일전쟁'],period:'1592–1598',era:'근세',region:'한반도',sides:['조선·명','일본 (도요토미 정권)'],
+   bg:['일본을 통일한 도요토미 히데요시가 명나라 정복을 내세우며 조선에 길을 빌려 달라고 요구했습니다.','조선은 오랜 평화로 국방이 약해져 있었고 일본은 전국시대를 거치며 조총으로 무장한 숙련병을 갖추고 있었습니다.'],
+   course:['1592년 4월 일본군이 부산에 상륙해 20일 만에 한양을 점령했고 선조는 의주로 피란했습니다.','이순신의 조선 수군이 옥포·한산도 해전 등에서 연승해 일본의 해상 보급로를 끊었습니다.','곳곳에서 의병이 일어났고 명나라 원군과 함께 1593년 평양을 되찾았으며 행주대첩에서 승리했습니다.','강화 협상이 결렬되어 1597년 정유재란이 일어났고 칠천량 해전 패배 뒤 이순신이 명량 해전에서 13척으로 승리했습니다.','1598년 도요토미가 죽자 일본군이 철수했고 노량 해전에서 이순신이 전사했습니다.'],
+   result:['일본군이 물러났으나 조선은 인구와 농토가 크게 줄고 문화재가 대량으로 소실·약탈되었습니다.','명은 국력이 소모되어 후금(청)이 성장할 틈이 생겼고 일본에서는 도쿠가와 막부가 들어섰습니다.'],
+   sig:'제해권이 육상 전쟁의 보급을 좌우한 사례이며, 조총이라는 신무기가 동아시아 전쟁에 본격 등장했습니다.',cas:'정확한 집계 없음 (조선 인구 피해가 매우 컸음)',wiki:'Japanese_invasions_of_Korea_(1592–1598)'},
+  {id:'byeongja',name:'병자호란',en:'Qing invasion of Joseon',alias:['정묘호란','남한산성','삼전도'],period:'1636–1637',era:'근세',region:'한반도',sides:['조선','청'],
+   bg:['후금은 1627년 정묘호란으로 조선과 형제 관계를 맺었습니다.','1636년 국호를 청으로 바꾼 홍타이지가 군신 관계를 요구했으나 조선 조정은 친명 배금 노선에 따라 거부했습니다.'],
+   course:['1636년 12월 청군이 압록강을 건너 빠르게 남하했습니다.','인조는 강화도로 가지 못하고 남한산성으로 들어가 약 45일간 버텼습니다.','강화도가 함락되고 구원군이 패하자 조정은 항복을 결정했습니다.'],
+   result:['1637년 1월 인조가 삼전도에서 청 태종에게 항복 의식을 치렀습니다.','조선은 청과 군신 관계를 맺고 왕자들과 많은 백성이 볼모와 포로로 끌려갔습니다.'],
+   sig:'국제 질서의 변화(명청 교체)를 읽지 못한 외교가 군사적 패배로 이어진 사례로 자주 언급됩니다.',cas:'정확한 집계 없음 (수십만 명이 포로로 끌려갔다는 기록)',wiki:'Qing_invasion_of_Joseon'},
+  {id:'thirty',name:'30년 전쟁',en:"Thirty Years' War",alias:['베스트팔렌','종교 전쟁'],period:'1618–1648',era:'근세',region:'중부 유럽 (신성로마제국)',sides:['합스부르크 가문과 가톨릭 세력','개신교 제후·스웨덴·프랑스 등'],
+   bg:['종교개혁 이후 신성로마제국 안에서 가톨릭과 개신교의 갈등이 쌓였습니다.','1618년 보헤미아 개신교 귀족들이 황제의 관리들을 창밖으로 던진 ‘프라하 창문 투척 사건’이 도화선이 되었습니다.'],
+   course:['보헤미아·팔츠 전쟁에서 황제군이 개신교 세력을 눌렀습니다.','덴마크가 개입했다가 패했고, 이어 스웨덴 구스타브 아돌프가 개입해 브라이텐펠트 전투에서 승리했습니다.','가톨릭 국가 프랑스가 합스부르크를 견제하려 개신교 편으로 참전하며 종교 전쟁이 패권 전쟁으로 바뀌었습니다.','용병 군대의 약탈과 기근·전염병으로 독일 지역 인구가 크게 줄었습니다.'],
+   result:['1648년 베스트팔렌 조약으로 각 국가의 주권과 종교 선택권이 인정되었습니다.','네덜란드와 스위스의 독립이 공인되고 프랑스·스웨덴이 강국으로 떠올랐습니다.'],
+   sig:'주권 국가 체제(베스트팔렌 체제)의 출발점이자, 용병 대신 상비군을 키우는 계기가 되었습니다.',cas:'약 450만–800만 명 (질병·기근 포함 추정)',wiki:"Thirty_Years'_War"},
+  {id:'napoleonic',name:'나폴레옹 전쟁',en:'Napoleonic Wars',alias:['나폴레옹','워털루','트라팔가르'],period:'1803–1815',era:'근대',region:'유럽',sides:['나폴레옹의 프랑스 제국과 동맹국','영국·오스트리아·러시아·프로이센 등 대프랑스 동맹'],
+   bg:['프랑스 혁명 이후 혁명의 확산을 두려워한 유럽 군주국들과 프랑스가 전쟁을 이어 왔습니다.','1804년 황제가 된 나폴레옹은 국민 징병제로 키운 대군과 군단 체계로 유럽 패권을 노렸습니다.'],
+   course:['트라팔가르 해전(1805)에서 영국 넬슨 제독이 프랑스·스페인 함대를 격파해 영국 침공이 좌절되었습니다.','아우스터리츠(1805)·예나(1806) 전투에서 오스트리아·러시아·프로이센을 연파했습니다.','대륙봉쇄령으로 영국을 경제적으로 고립시키려 했으나 이베리아 반도 전쟁이 수렁이 되었습니다.','1812년 러시아 원정에 60만 명 이상을 투입했으나 겨울과 보급 실패로 괴멸했습니다.','라이프치히 전투(1813) 패배 후 퇴위했다가 복귀해 워털루 전투(1815)에서 최종 패배했습니다.'],
+   result:['빈 회의(1814–1815)로 유럽의 세력 균형 질서가 다시 짜였습니다.','민족주의와 혁명 이념이 유럽 각지로 퍼졌습니다.'],
+   sig:'국민 징병제에 의한 대규모 군대와 군단 단위 기동전으로 근대 전쟁의 틀을 만들었습니다.',cas:'약 350만–700만 명 (군인·민간인 추정)',wiki:'Napoleonic_Wars'},
+  {id:'civilwar',name:'미국 남북전쟁',en:'American Civil War',alias:['링컨','게티즈버그','노예제'],period:'1861–1865',era:'근대',region:'미국',sides:['북부 연방 (Union)','남부 연합 (Confederacy)'],
+   bg:['노예제 확대를 둘러싸고 산업화된 북부와 농업 중심의 남부가 오래 대립했습니다.','1860년 노예제 확대에 반대한 링컨이 대통령에 당선되자 남부 11개 주가 연방을 탈퇴했습니다.'],
+   course:['1861년 남군이 섬터 요새를 포격하며 전쟁이 시작되었습니다.','초반에는 리 장군의 남군이 선전했으나 1863년 게티즈버그 전투에서 북군이 승리했습니다.','같은 해 링컨이 노예해방선언을 발표하고 북군이 빅스버그를 함락해 미시시피강을 장악했습니다.','셔먼의 조지아 진군 등 남부의 경제 기반을 파괴하는 작전이 이어졌습니다.'],
+   result:['1865년 4월 리 장군이 애퍼매톡스에서 항복했고 며칠 뒤 링컨이 암살되었습니다.','수정헌법 13조로 노예제가 폐지되고 연방이 유지되었습니다.'],
+   sig:'철도·전신·대량 생산 소총이 쓰인 최초의 산업화 전쟁 중 하나이며, 참호전의 전조가 나타났습니다.',cas:'군인 약 62만–75만 명 사망',wiki:'American_Civil_War'},
+  {id:'sinojapanese1',name:'청일전쟁',en:'First Sino-Japanese War',alias:['동학농민운동','시모노세키'],period:'1894–1895',era:'근대',region:'한반도·중국 동북부',sides:['일본','청'],
+   bg:['조선에 대한 영향력을 놓고 청과 일본이 경쟁했습니다.','1894년 동학농민운동을 진압하려 조선이 청에 원병을 요청하자 일본도 톈진 조약을 근거로 출병했습니다.'],
+   course:['일본이 경복궁을 점령하고 풍도 앞바다에서 청 함대를 기습했습니다.','평양 전투와 황해 해전에서 일본이 승리했습니다.','일본군이 랴오둥반도와 웨이하이웨이를 점령하고 북양함대가 항복했습니다.'],
+   result:['1895년 시모노세키 조약으로 청은 조선이 자주국임을 인정하고 타이완·랴오둥반도를 일본에 넘겼습니다.','러시아·독일·프랑스의 삼국간섭으로 일본은 랴오둥반도를 반환했습니다.'],
+   sig:'근대화에 성공한 일본이 동아시아의 새 강국으로 떠오르고 청 중심 질서가 무너졌습니다.',cas:'양측 수만 명 (질병 사망 다수)',wiki:'First_Sino-Japanese_War'},
+  {id:'russojapanese',name:'러일전쟁',en:'Russo-Japanese War',alias:['쓰시마','뤼순','포츠머스'],period:'1904–1905',era:'근대',region:'만주·한반도·동해',sides:['일본','러시아 제국'],
+   bg:['삼국간섭 이후 러시아가 랴오둥반도를 조차하고 만주와 한반도로 세력을 넓혔습니다.','영국과 동맹을 맺은 일본이 러시아와 협상하다 결렬되자 개전했습니다.'],
+   course:['1904년 2월 일본이 뤼순항의 러시아 함대를 기습했습니다.','뤼순 요새 공방전에서 기관총과 참호로 양측에 막대한 사상자가 났습니다.','1905년 봉천 전투에서 일본이 승리했습니다.','쓰시마 해전에서 일본 연합함대가 유럽에서 온 러시아 발트 함대를 거의 전멸시켰습니다.'],
+   result:['미국 중재로 포츠머스 조약을 맺어 일본이 한반도에 대한 우월권과 남만주 이권을 얻었습니다.','같은 해 을사늑약으로 대한제국의 외교권이 박탈되었고, 러시아에서는 1905년 혁명이 일어났습니다.'],
+   sig:'아시아 국가가 유럽 강대국을 이긴 첫 근대 전쟁이며, 1차 대전의 참호전과 기관총전을 예고했습니다.',cas:'양측 군 사망 십수만 명 추정',wiki:'Russo-Japanese_War'},
+  {id:'ww1',name:'제1차 세계대전',en:'World War I',alias:['1차 대전','1차대전','세계대전','참호전','사라예보'],period:'1914–1918',era:'세계대전',region:'유럽·중동·아프리카·태평양',sides:['협상국 (영국·프랑스·러시아·이탈리아·미국 등)','동맹국 (독일·오스트리아-헝가리·오스만 제국·불가리아)'],
+   bg:['유럽 강대국들이 두 동맹 진영으로 나뉘어 군비 경쟁과 식민지 경쟁을 벌였습니다.','1914년 6월 사라예보에서 오스트리아 황태자가 세르비아 민족주의자에게 암살되자 동맹 관계를 따라 전쟁이 연쇄적으로 번졌습니다.'],
+   course:['독일의 슐리펜 계획이 마른 전투(1914)에서 막히며 서부전선이 참호전으로 굳었습니다.','베르됭·솜 전투(1916)에서 수개월 동안 수십만 명씩 사상자가 났지만 전선은 거의 움직이지 않았습니다.','독가스, 전차, 항공기, 잠수함 등 신무기가 등장했습니다.','1917년 러시아 혁명으로 러시아가 이탈하고 미국이 참전했습니다.','1918년 독일의 춘계 공세가 실패하고 연합군의 백일 공세로 독일이 휴전을 요청했습니다.'],
+   result:['1918년 11월 휴전, 1919년 베르사유 조약으로 독일에 막대한 배상과 군비 제한이 부과되었습니다.','오스트리아-헝가리·오스만·러시아·독일 제국이 무너지고 국제연맹이 만들어졌습니다.'],
+   sig:'포병이 전장 사상자의 약 60%를 낸 총력전으로, 국가의 산업 전체가 전쟁에 동원되었습니다.',cas:'약 1,500만–2,000만 명 (군인 약 900만–1,000만)',wiki:'World_War_I'},
+  {id:'ww2',name:'제2차 세계대전',en:'World War II',alias:['2차 대전','2차대전','태평양 전쟁','노르망디','히틀러','진주만'],period:'1939–1945',era:'세계대전',region:'전 세계',sides:['연합국 (미국·소련·영국·중국 등)','추축국 (독일·일본·이탈리아 등)'],
+   bg:['베르사유 체제에 대한 불만과 대공황 속에서 독일의 나치, 이탈리아 파시즘, 일본 군국주의가 팽창했습니다.','영국·프랑스의 유화정책 끝에 1939년 9월 독일이 폴란드를 침공했습니다.'],
+   course:['독일이 전차와 항공기를 결합한 전격전으로 1940년 프랑스를 6주 만에 점령했습니다.','1941년 독일이 소련을 침공하고 일본이 진주만을 공격해 미국이 참전했습니다.','미드웨이 해전(1942)과 스탈린그라드 전투(1942–1943)가 전세를 바꿨습니다.','1944년 노르망디 상륙작전으로 서부전선이 열렸고 소련군이 동쪽에서 베를린으로 진격했습니다.','1945년 5월 독일이 항복하고 8월 히로시마·나가사키 원자폭탄 투하 후 일본이 항복했습니다.'],
+   result:['국제연합(UN)이 창설되고 미국과 소련이 초강대국으로 떠오르며 냉전이 시작되었습니다.','한반도는 해방되었으나 38선을 경계로 미소에 의해 분할 점령되었습니다.','홀로코스트 등 전쟁 범죄를 다룬 뉘른베르크·도쿄 재판이 열렸습니다.'],
+   sig:'기갑·항공 기동전, 항공모함, 전략폭격, 레이더, 핵무기가 등장해 현대 전쟁의 거의 모든 요소가 갖춰졌습니다.',cas:'약 7,000만–8,500만 명 (민간인 다수)',wiki:'World_War_II'},
+  {id:'korea',name:'한국전쟁',en:'Korean War',alias:['6·25','6.25','625','6·25 전쟁','인천상륙작전','휴전협정'],period:'1950–1953',era:'냉전',region:'한반도',sides:['대한민국·유엔군 (미국 등 16개국 전투병 파병)','북한·중국 인민지원군 (소련 지원)'],
+   bg:['2차 대전 후 한반도가 38선을 경계로 미소에 분할 점령되고 1948년 남북에 각각 정부가 섰습니다.','김일성은 스탈린과 마오쩌둥의 동의를 얻어 무력 통일을 준비했습니다.'],
+   course:['1950년 6월 25일 북한군이 전면 남침해 사흘 만에 서울을 점령하고 낙동강까지 밀고 내려왔습니다.','유엔 안보리 결의로 유엔군이 참전했고 9월 인천상륙작전으로 전세를 뒤집어 압록강 근처까지 북진했습니다.','10월 중국군이 개입해 1951년 1월 서울을 다시 빼앗겼습니다(1·4 후퇴).','1951년 중반부터 38선 부근에서 고지 쟁탈전이 이어지며 2년 넘게 휴전 협상이 진행되었습니다.'],
+   result:['1953년 7월 27일 정전협정이 체결되고 군사분계선과 비무장지대(DMZ)가 설정되었습니다.','평화조약 없이 정전 상태가 지금까지 이어지고 있으며, 한미상호방위조약이 체결되었습니다.'],
+   sig:'냉전 시기 첫 대규모 열전으로, 강대국이 핵을 가진 상태에서 전쟁을 ‘제한전’으로 관리한 첫 사례입니다.',cas:'약 250만–300만 명 이상 (민간인 포함 추정)',wiki:'Korean_War'},
+  {id:'vietnam',name:'베트남 전쟁',en:'Vietnam War',alias:['월남전','통킹만','구정 공세','사이공'],period:'1955–1975',era:'냉전',region:'베트남·라오스·캄보디아',sides:['남베트남·미국·한국 등','북베트남·베트콩 (소련·중국 지원)'],
+   bg:['1954년 프랑스가 디엔비엔푸에서 패한 뒤 제네바 협정으로 베트남이 북위 17도선에서 나뉘었습니다.','통일 선거가 무산되고 남베트남에서 공산 게릴라(베트콩) 활동이 확대되었습니다.'],
+   course:['1964년 통킹만 사건 이후 미국이 대규모 지상군을 보내고 북베트남을 폭격했습니다. 한국군도 1964–1973년 파병했습니다.','정글 게릴라전과 호찌민 루트를 통한 보급 때문에 미군의 화력 우위가 결정적이지 못했습니다.','1968년 구정 공세는 군사적으로는 실패했지만 미국 여론을 반전으로 돌려놓았습니다.','1973년 파리 평화협정으로 미군이 철수했습니다.'],
+   result:['1975년 4월 사이공이 함락되고 1976년 베트남이 공산 체제로 통일되었습니다.','미국에서는 해외 군사 개입을 꺼리는 이른바 ‘베트남 증후군’이 생겼습니다.'],
+   sig:'헬리콥터 기동과 초기 정밀유도폭탄이 쓰였고, 화력보다 정치적 의지와 여론이 승패를 가른 비대칭전의 대표 사례입니다.',cas:'베트남인 약 100만–300만 명 이상, 미군 약 5만 8천 명',wiki:'Vietnam_War'},
+  {id:'sixday',name:'6일 전쟁 (3차 중동전쟁)',en:'Six-Day War',alias:['3차 중동전쟁','중동전쟁','골란고원','시나이'],period:'1967년 6월 5–10일',era:'냉전',region:'중동',sides:['이스라엘','이집트·시리아·요르단'],
+   bg:['이집트가 티란 해협을 봉쇄하고 시나이반도에 병력을 집결시키며 긴장이 높아졌습니다.'],
+   course:['이스라엘 공군이 선제공격으로 첫날 이집트 공군 대부분을 지상에서 파괴했습니다.','제공권을 바탕으로 기갑부대가 시나이반도를 점령했습니다.','요르단으로부터 동예루살렘·요르단강 서안을, 시리아로부터 골란고원을 빼앗았습니다.'],
+   result:['이스라엘이 영토를 크게 넓혔고, 유엔 안보리 결의 242호가 ‘평화와 영토의 교환’ 원칙을 제시했습니다.','점령지 문제는 지금까지 이스라엘–팔레스타인 갈등의 핵심으로 남아 있습니다.'],
+   sig:'항공 선제타격으로 제공권을 장악하면 짧은 기간에 승패가 갈릴 수 있음을 보여 줬습니다.',cas:'이스라엘 약 700–1,000명, 아랍 측 약 1만–2만 명 추정',wiki:'Six-Day_War'},
+  {id:'yomkippur',name:'욤키푸르 전쟁 (4차 중동전쟁)',en:'Yom Kippur War',alias:['4차 중동전쟁','10월 전쟁','중동전쟁','석유 파동'],period:'1973년 10월 6–25일',era:'냉전',region:'중동',sides:['이스라엘','이집트·시리아'],
+   bg:['6일 전쟁에서 잃은 시나이반도와 골란고원을 되찾으려 이집트와 시리아가 기습을 준비했습니다.'],
+   course:['유대교 명절 욤키푸르에 이집트군이 수에즈 운하를 건너고 시리아군이 골란고원을 공격했습니다.','소련제 대전차미사일과 지대공미사일에 이스라엘 전차와 항공기가 큰 손실을 입었습니다.','미국의 긴급 공수 지원 이후 이스라엘이 반격해 운하를 역도하했습니다.'],
+   result:['유엔 중재로 휴전했고, 아랍 산유국의 석유 금수 조치로 1차 석유 파동이 일어났습니다.','1978년 캠프 데이비드 협정과 1979년 이집트–이스라엘 평화조약으로 이어졌습니다.'],
+   sig:'값싼 유도미사일이 고가의 전차·항공기를 위협한 첫 대규모 사례로, 오늘날 드론·대전차무기 논쟁의 원형입니다.',cas:'이스라엘 약 2,500–2,800명, 아랍 측 약 8,000–1만 8,000명 추정',wiki:'Yom_Kippur_War'},
+  {id:'sovietafghan',name:'소련–아프가니스탄 전쟁',en:'Soviet–Afghan War',alias:['아프간 전쟁 1979','무자헤딘','스팅어'],period:'1979–1989',era:'냉전',region:'아프가니스탄',sides:['소련·아프가니스탄 공산 정부','무자헤딘 (미국·파키스탄·사우디 지원)'],
+   bg:['1978년 쿠데타로 들어선 공산 정권이 반란에 부딪히자 소련이 1979년 12월 군대를 보냈습니다.'],
+   course:['소련군이 도시와 주요 도로를 장악했지만 산악 지대의 무자헤딘 게릴라를 제압하지 못했습니다.','미국이 CIA를 통해 무기를 지원했고, 1986년부터 스팅어 휴대용 대공미사일로 소련 헬기가 큰 피해를 입었습니다.','고르바초프가 철군을 결정해 1989년 2월 소련군이 완전히 철수했습니다.'],
+   result:['소련의 국력과 위신이 크게 떨어져 1991년 소련 해체에 영향을 주었습니다.','이후 내전을 거쳐 탈레반이 집권했고 알카에다가 이곳을 거점으로 삼았습니다.'],
+   sig:'휴대용 대공미사일 같은 값싼 무기를 지원받은 게릴라가 초강대국의 공중 우위를 꺾은 사례입니다.',cas:'소련군 약 1만 5천 명, 아프간인 약 50만–200만 명 추정',wiki:'Soviet–Afghan_War'},
+  {id:'iraniraq',name:'이란–이라크 전쟁',en:'Iran–Iraq War',alias:['이란이라크','도시 전쟁','유조선 전쟁'],period:'1980–1988',era:'냉전',region:'중동 (페르시아만)',sides:['이라크 (사담 후세인)','이란 (호메이니 체제)'],
+   bg:['1979년 이란 혁명으로 혼란한 틈을 타 사담 후세인이 국경 수로(샤트알아랍) 분쟁과 혁명 확산 차단을 명분으로 침공했습니다.'],
+   course:['이라크가 초반 이란 남서부를 점령했으나 이란이 1982년 대부분을 되찾았습니다.','이란의 인해전술과 이라크의 화학무기 사용 속에 1차 대전 같은 참호전이 이어졌습니다.','양측이 서로의 도시에 탄도미사일을 쏘는 ‘도시 전쟁’, 페르시아만 유조선을 공격하는 ‘유조선 전쟁’이 벌어졌습니다.'],
+   result:['1988년 유엔 안보리 결의 598호로 휴전했으며 국경은 사실상 전쟁 전과 같았습니다.','이라크는 막대한 전쟁 부채를 지고 1990년 쿠웨이트를 침공하게 됩니다.'],
+   sig:'탄도미사일 상호 공격과 해상 교통로 공격은 2026년 이란 전쟁의 미사일전·호르무즈 봉쇄와 이어지는 선례입니다.',cas:'약 50만–100만 명 이상 추정',wiki:'Iran–Iraq_War'},
+  {id:'falklands',name:'포클랜드 전쟁',en:'Falklands War',alias:['말비나스','엑조세'],period:'1982년 4–6월',era:'냉전',region:'남대서양',sides:['영국','아르헨티나'],
+   bg:['아르헨티나 군사정권이 영유권을 주장해 온 포클랜드(말비나스) 제도를 1982년 4월 기습 점령했습니다.'],
+   course:['영국이 1만 3천km 떨어진 곳으로 항모 기동부대를 보냈습니다.','영국 잠수함이 아르헨티나 순양함 헤네랄 벨그라노를 격침했고, 아르헨티나의 엑조세 대함미사일이 영국 구축함 셰필드를 격침했습니다.','영국군이 상륙해 6월 14일 스탠리를 탈환했습니다.'],
+   result:['아르헨티나가 항복했고 군사정권이 무너져 민주화로 이어졌습니다.','영국은 영유권을 유지했습니다.'],
+   sig:'대함미사일 한 발이 군함을 잡을 수 있음을 보여 준 원거리 원정작전의 사례입니다.',cas:'영국 255명, 아르헨티나 649명, 주민 3명 사망',wiki:'Falklands_War'},
+  {id:'gulf',name:'걸프전',en:'Gulf War',alias:['사막의 폭풍','쿠웨이트','1991 이라크'],period:'1990–1991',era:'탈냉전',region:'쿠웨이트·이라크',sides:['미국 주도 다국적군 (35개국)','이라크'],
+   bg:['1990년 8월 이라크가 쿠웨이트를 침공해 합병을 선언했습니다.','유엔 안보리가 철수를 요구하고 무력 사용을 승인했습니다.'],
+   course:['1991년 1월 ‘사막의 폭풍’ 작전으로 약 6주간 대규모 공습을 벌였습니다. 스텔스기와 정밀유도무기가 주목받았습니다.','이라크는 스커드 미사일로 이스라엘과 사우디를 공격했고 패트리어트가 요격에 투입되었습니다.','2월 지상전 개시 약 100시간 만에 쿠웨이트를 해방했습니다.'],
+   result:['이라크군이 쿠웨이트에서 물러났으나 후세인 정권은 유지되었습니다.','미국 중심의 탈냉전 질서가 자리 잡았습니다.'],
+   sig:'정밀유도무기·스텔스·GPS·위성이 결합한 ‘정보화 전쟁’의 시작입니다. 다만 유도무기 비중은 아직 6.5%였습니다.',cas:'연합군 약 300명, 이라크군 수만 명 추정',wiki:'Gulf_War'},
+  {id:'bosnia',name:'보스니아 전쟁',en:'Bosnian War',alias:['유고슬라비아 내전','유고 전쟁','스레브레니차','사라예보 포위','데이턴'],period:'1992–1995',era:'탈냉전',region:'보스니아 헤르체고비나',sides:['보스니아 정부 (보스니아계 중심)·크로아티아계','보스니아 세르비아계 (유고연방·세르비아 지원)'],
+   bg:['냉전 종식과 함께 유고슬라비아 연방이 해체되면서 민족 간 갈등이 폭발했습니다.','1992년 보스니아가 독립을 선언하자 세르비아계가 반발해 전쟁이 시작되었습니다.'],
+   course:['세르비아계 군대가 사라예보를 약 4년간 포위했습니다.','여러 민족 집단에 대한 ‘인종 청소’가 자행되었고 1995년 스레브레니차에서 약 8,000명의 보스니아계 남성이 학살되었습니다.','NATO가 공습으로 개입했습니다.'],
+   result:['1995년 데이턴 협정으로 보스니아가 두 개의 정치체로 나뉜 연방 국가가 되었습니다.','구유고 국제형사재판소(ICTY)가 전쟁 범죄를 재판했습니다.'],
+   sig:'탈냉전 시대 인도적 개입과 국제 전범 재판의 선례가 되었습니다.',cas:'약 10만 명 사망 추정',wiki:'Bosnian_War'},
+  {id:'kosovo',name:'코소보 전쟁',en:'Kosovo War',alias:['NATO 공습','유고 공습'],period:'1998–1999',era:'탈냉전',region:'코소보·유고슬라비아',sides:['코소보 해방군·NATO','유고슬라비아 연방 (세르비아)'],
+   bg:['세르비아의 자치권 박탈과 탄압에 맞서 알바니아계 코소보 해방군이 무장 투쟁에 나섰습니다.'],
+   course:['유고군의 진압 과정에서 대규모 민간인 피해와 난민이 발생했습니다.','1999년 NATO가 유엔 안보리 승인 없이 78일간 공습을 벌였습니다.','지상군 투입 없이 항공력만으로 유고 정부가 철수에 동의했습니다.'],
+   result:['코소보가 유엔 관리 아래 놓였고 2008년 독립을 선언했습니다(세르비아 등은 인정하지 않음).'],
+   sig:'항공력만으로 정치적 목표를 달성한 사례로, ‘인도적 개입’의 정당성 논쟁을 남겼습니다.',cas:'약 1만 3천 명 사망 추정',wiki:'Kosovo_War'},
+  {id:'afghanistan',name:'아프가니스탄 전쟁',en:'War in Afghanistan (2001–2021)',alias:['아프간 전쟁','테러와의 전쟁','탈레반','9·11'],period:'2001–2021',era:'탈냉전',region:'아프가니스탄',sides:['미국·NATO·아프가니스탄 정부','탈레반·알카에다'],
+   bg:['2001년 9·11 테러 이후 미국이 알카에다를 숨겨 준 탈레반 정권에 대한 공격을 시작했습니다.'],
+   course:['미 특수부대와 공군, 북부동맹이 두 달 만에 탈레반 정권을 무너뜨렸습니다.','탈레반이 파키스탄 국경 지대에서 재건해 반군 활동을 이어 갔습니다.','무장 무인기를 이용한 표적 공습이 대테러전의 핵심 수단이 되었습니다. 2011년 빈 라덴이 파키스탄에서 사살되었습니다.','2020년 도하 합의로 미군 철수가 결정되었습니다.'],
+   result:['2021년 8월 미군 철수 과정에서 탈레반이 카불을 점령하고 정권을 되찾았습니다.'],
+   sig:'국가 건설을 동반한 장기 대반란전의 한계를 보여 줬고, 무인기 표적 공습이 일상화되었습니다.',cas:'약 17만 명 이상 추정 (미군 약 2,400명)',wiki:'War_in_Afghanistan_(2001–2021)'},
+  {id:'iraq',name:'이라크 전쟁',en:'Iraq War',alias:['이라크전','사담 후세인','2003 이라크','IS'],period:'2003–2011',era:'탈냉전',region:'이라크',sides:['미국·영국 주도 연합군 (한국 자이툰 부대 파병)','이라크 정부군, 이후 각종 무장 세력'],
+   bg:['미국은 이라크가 대량살상무기를 보유하고 테러 조직과 연계되었다고 주장했으나 유엔 안보리 승인을 얻지 못했습니다.'],
+   course:['2003년 3월 침공 3주 만에 바그다드가 함락되었습니다. 미군 탄약의 약 68%가 정밀유도무기였습니다.','대량살상무기는 발견되지 않았고, 군과 집권당 해체 후 무장 저항과 종파 내전이 격화되었습니다.','2007년 병력 증강과 수니파 부족 협력으로 폭력이 줄었습니다.'],
+   result:['2011년 미군이 철수했으나 정치 불안 속에서 2014년 이슬람국가(IS)가 부상했습니다.'],
+   sig:'빠른 정밀 타격으로 정권은 무너뜨렸지만 전후 안정화에 실패한 사례입니다.',cas:'민간인 사망 최소 약 18만–20만 명 (Iraq Body Count), 미군 약 4,500명',wiki:'Iraq_War'},
+  {id:'georgia',name:'러시아–조지아 전쟁',en:'Russo-Georgian War',alias:['남오세티야','그루지야','5일 전쟁'],period:'2008년 8월',era:'탈냉전',region:'조지아 (남오세티야·압하지야)',sides:['조지아','러시아·남오세티야·압하지야 분리세력'],
+   bg:['조지아의 NATO 가입 추진과 분리주의 지역 남오세티야를 둘러싼 긴장이 높아졌습니다.'],
+   course:['조지아군이 남오세티야 수도 츠힌발리를 공격하자 러시아가 대규모로 개입했습니다.','러시아군이 5일 만에 조지아군을 몰아내고 조지아 본토 일부까지 진격했습니다.'],
+   result:['프랑스 중재로 휴전했고 러시아가 남오세티야·압하지야의 독립을 승인하고 군대를 주둔시켰습니다.'],
+   sig:'러시아가 옛 소련 국가의 서방 접근을 무력으로 막은 첫 사례로, 2014년 크림 합병과 2022년 우크라이나 침공의 전조로 평가됩니다.',cas:'수백 명 사망 (약 850명 추정)',wiki:'Russo-Georgian_War'},
+  {id:'syria',name:'시리아 내전',en:'Syrian civil war',alias:['시리아','아사드','IS','이슬람국가'],period:'2011–2024',era:'탈냉전',region:'시리아',sides:['아사드 정부 (러시아·이란·헤즈볼라 지원)','반군 각 세력·쿠르드 세력·IS 등 (일부 미국·튀르키예 지원)'],
+   bg:['2011년 ‘아랍의 봄’ 시위를 아사드 정부가 무력 진압하면서 무장 반란으로 번졌습니다.'],
+   course:['반군·이슬람 무장세력·쿠르드 세력이 뒤엉킨 다자 내전이 되었고, 정부군이 화학무기를 사용한 의혹이 제기되었습니다.','2014년 IS가 동부를 장악하자 미국 주도 연합군이 공습했습니다.','2015년 러시아의 공습 개입으로 정부군이 알레포 등 주요 도시를 되찾았습니다.','2024년 11월 반군이 기습 공세를 시작했습니다.'],
+   result:['2024년 12월 반군이 다마스쿠스를 점령하고 아사드가 러시아로 망명하며 정권이 무너졌습니다.','수백만 명의 난민이 발생해 유럽 난민 위기로 이어졌습니다.'],
+   sig:'강대국과 지역 세력이 대리전 방식으로 개입한 21세기형 다자 내전입니다.',cas:'약 50만–60만 명 이상 사망 추정',wiki:'Syrian_civil_war'},
+  {id:'karabakh',name:'2차 나고르노카라바흐 전쟁',en:'Second Nagorno-Karabakh War',alias:['나고르노카라바흐','아르메니아 아제르바이잔','바이락타르'],period:'2020년 9–11월',era:'탈냉전',region:'남캅카스',sides:['아제르바이잔 (튀르키예 지원)','아르메니아·아르차흐 공화국'],
+   bg:['1990년대 1차 전쟁 이후 아르메니아계가 아제르바이잔 영토인 나고르노카라바흐와 주변 지역을 장악하고 있었습니다.'],
+   course:['아제르바이잔이 튀르키예제 바이락타르 TB2 무인기와 이스라엘제 배회형 자폭 드론으로 아르메니아 방공망과 전차를 파괴했습니다.','드론 영상이 실시간 선전전에 쓰였습니다.','11월 슈샤 함락 후 러시아 중재로 휴전했습니다.'],
+   result:['아제르바이잔이 주변 지역 대부분을 되찾았고, 2023년 남은 지역까지 장악해 아르메니아계 10만여 명이 떠났습니다.'],
+   sig:'값싼 무인기가 재래식 기갑·방공 전력을 압도할 수 있음을 처음 보여 준 전쟁으로, 우크라이나 드론전의 예고편이었습니다.',cas:'양측 약 7,000명 안팎 사망',wiki:'Second_Nagorno-Karabakh_War'}
+  ];
+
+  const esc=t=>String(t??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const ERAS=['전체','고대·중세','근세','근대','세계대전','냉전','탈냉전'];
+  let hEra='전체', hSample=null;
+  const hq=document.getElementById('h-q'), hl=document.getElementById('h-list'), hd=document.getElementById('h-detail');
+  const norm=t=>String(t||'').toLowerCase().replace(/[\s·.\-–()'’]/g,'');
+  const hMatch=(w,q)=>{if(!q)return true;const n=norm(q);return [w.name,w.en,w.region,...(w.alias||[]),...w.sides].some(x=>norm(x).includes(n));};
+  const erasEl=document.getElementById('h-eras');
+  ERAS.forEach(e=>{const b=document.createElement('button');b.className='chip-btn';b.type='button';b.textContent=e;b.setAttribute('aria-pressed',e===hEra);b.id='he-'+ERAS.indexOf(e);
+    b.addEventListener('click',()=>{hEra=e;erasEl.querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',x===b));hList();});erasEl.append(b);});
+  let hCur='korea';
+  function hList(){
+    const q=hq.value.trim();
+    const rows=WARS.filter(w=>(hEra==='전체'||w.era===hEra)&&hMatch(w,q));
+    document.getElementById('h-count').textContent=q?`‘${q}’ 검색 결과 ${rows.length}건`:`${rows.length}개 전쟁 · 시간순`;
+    hl.innerHTML=rows.map(w=>`<li><button type="button" class="h-item" data-id="${w.id}" aria-current="${w.id===hCur}"><b>${esc(w.name)}</b><span>${esc(w.period)} · ${esc(w.region)}</span></button></li>`).join('');
+    hl.querySelectorAll('.h-item').forEach(b=>b.addEventListener('click',()=>{hCur=b.dataset.id;hShow(WARS.find(w=>w.id===hCur));hList();if(window.innerWidth<820)hd.scrollIntoView({behavior:'smooth',block:'start'});}));
+    const ai=document.getElementById('h-ai');
+    ai.hidden=!(q&&rows.length===0);
+    document.getElementById('h-ai-q').textContent=`‘${q}’`;
+    document.getElementById('h-ai-btn').hidden=!hSample;document.getElementById('h-ai-note').hidden=!hSample;document.getElementById('h-ai-off').hidden=!!hSample;
+    if(rows.length===1&&q)hShowIf(rows[0]);
+  }
+  function hShowIf(w){if(hCur!==w.id){hCur=w.id;hShow(w);hl.querySelectorAll('.h-item').forEach(b=>b.setAttribute('aria-current',b.dataset.id===hCur));}}
+  const li=a=>(a||[]).map(x=>`<li>${esc(x)}</li>`).join('');
+  function hShow(w,ai){
+    hd.innerHTML=`
+      <header class="h-head">
+        ${ai?'<span class="sample">Claude가 작성 · 사실 확인 필요</span>':''}
+        <span class="eyebrow">${esc(w.era||'')}${w.era?' · ':''}${esc(w.region)}</span>
+        <h2>${esc(w.name)}</h2>
+        <p class="h-en">${esc(w.en)} · <span class="num">${esc(w.period)}</span></p>
+      </header>
+      <div class="h-sides"><div><span class="eyebrow">교전 측</span><b>${esc(w.sides[0])}</b></div><span class="h-vs">vs</span><div><span class="eyebrow">교전 측</span><b>${esc(w.sides[1])}</b></div></div>
+      <div class="h-grid">
+        <section><h3>배경</h3><ul>${li(w.bg)}</ul></section>
+        <section><h3>경과</h3><ol>${li(w.course)}</ol></section>
+        <section><h3>결과</h3><ul>${li(w.result)}</ul></section>
+      </div>
+      <div class="h-sig"><h3>전쟁사에서의 의미</h3><p>${esc(w.sig)}</p></div>
+      <dl class="kv"><dt>인명 피해</dt><dd>${esc(w.cas)}</dd></dl>
+      ${w.wiki?`<p class="src">더 읽기: <a href="https://en.wikipedia.org/wiki/${encodeURIComponent(w.wiki).replace(/%2F/g,'/')}" target="_blank" rel="noopener">Wikipedia · ${esc(w.en)}</a> · 인명 피해는 추정치로 자료마다 차이가 큽니다.</p>`:'<p class="src">Claude가 일반 지식으로 작성한 요약입니다. 중요한 내용은 다른 자료로 확인하세요.</p>'}`;
+  }
+  hq.addEventListener('input',hList);
+  document.getElementById('h-ai-btn').addEventListener('click',async()=>{
+    const q=hq.value.trim(); if(!q||!hSample)return;
+    const btn=document.getElementById('h-ai-btn'); btn.disabled=true;
+    hd.innerHTML='<p class="src">Claude가 ‘'+esc(q)+'’에 대해 정리하는 중입니다… (보통 10–60초)</p>';
+    const prompt=`너는 전쟁사 해설가다. 사용자가 검색한 전쟁: "${q}"\n\n이 이름이 실제 역사 속 전쟁·전투·무력분쟁을 가리키면 한국어로 정리하라. 확실하지 않은 숫자는 "정확한 집계 없음"이라고 쓰고 지어내지 마라. 실제 전쟁이 아니거나 무엇인지 알 수 없으면 {"notFound": true}만 답하라.\n\n아래 형식의 JSON 객체 하나만 답하라:\n{"name":"한국어 이름","en":"영어 이름","period":"기간 (예: 1950–1953)","region":"지역","sides":["한쪽 교전국","다른 쪽 교전국"],"bg":["배경 문장 2–3개"],"course":["경과 문장 3–5개, 시간순"],"result":["결과 문장 2–3개"],"sig":"전쟁사(전술·무기·국제질서)에서의 의미 한 문장","cas":"인명 피해 추정 (모르면 정확한 집계 없음)"}`;
+    try{
+      const r=await hSample.json(prompt,{modelTier:'default'});
+      if(!r||r.notFound||!r.name||!Array.isArray(r.sides)){hd.innerHTML='<p class="src">‘'+esc(q)+'’에 해당하는 전쟁을 찾지 못했습니다. 다른 이름으로 검색해 보세요.</p>';}
+      else{r.sides=[r.sides[0]||'',r.sides[1]||''];hShow(r,true);}
+    }catch(e){
+      const m={not_granted:'Claude 사용이 허용되지 않아 검색할 수 없습니다.',rate_limited:'요청이 많습니다. 잠시 후 다시 시도해 주세요.',invalid_json:'답변 형식이 올바르지 않았습니다. 다시 시도해 주세요.',refused:'이 요청에는 답할 수 없습니다.',session_expired:'다시 로그인해 주세요.'};
+      hd.innerHTML='<p class="src">'+esc(m[e&&e.code]||'답변을 받지 못했습니다. 다시 시도해 주세요.')+'</p>';
+      if(e&&(e.code==='not_granted'||e.code==='sampling_disabled')){hSample=null;btn.hidden=true;}
+    }finally{btn.disabled=false;}
+  });
+  hShow(WARS.find(w=>w.id==='korea')); hList();
+  (async()=>{try{hSample=window.claude?await window.claude.use('sample'):null;}catch(e){hSample=null;} hList();})();
+
+  // Tabs with hash
+
+  const views=['overview','weapons','evolution','history','sources'];
+  function show(v){if(!views.includes(v))v='overview';
+    views.forEach(n=>{document.getElementById(n).hidden=n!==v;document.getElementById('t-'+n).setAttribute('aria-selected',n===v);});
+    try{history.replaceState(null,'','#'+v);}catch(e){}
+  }
+  document.querySelectorAll('nav button').forEach(b=>b.addEventListener('click',()=>{show(b.dataset.view);window.scrollTo(0,0);}));
+  show((location.hash||'').slice(1));
+
+  // Military strength tables
+  const VS={
+    ru:{sides:[['러시아','--crit'],['우크라이나','--ua']],rows:[
+      ['국방비 (2025)',[[190,'1,900억 달러','추정'],[84.1,'841억 달러','추정']]],
+      ['GDP 대비 국방비',[[7.5,'7.5%'],[40,'40%']]],
+      ['현역 병력',[[1134000,'약 113만 명','IISS 2025'],[800000,'약 80만 명','젤렌스키 2025.12']]]]},
+    ir:{sides:[['미국','--il'],['이스라엘','--il'],['이란','--crit']],rows:[
+      ['국방비 (2025)',[[954,'9,540억 달러'],[48.3,'483억 달러'],[7.4,'74억 달러','공식 예산']]],
+      ['GDP 대비 국방비',[[3.1,'3.1%'],[7.8,'7.8%'],[2.1,'2.1%']]],
+      ['현역 병력',[[1285084,'약 129만 명','DMDC 2025.9'],[169500,'약 17만 명','예비군 46.5만'],[610000,'약 61만 명','IISS 2025']]]]},
+    hm:{sides:[['이스라엘','--il'],['하마스','--crit'],['헤즈볼라','--warn']],rows:[
+      ['국방비 (2025)',[[48.3,'483억 달러'],[null,'공개 자료 없음'],[null,'공개 자료 없음']]],
+      ['병력',[[169500,'현역 약 17만 명','예비군 46.5만'],[25000,'약 2.5만 명','CRS 추정'],[null,'—']]],
+      ['로켓·미사일 보유',[[null,'—'],[null,'—'],[null,'7.5만–20만 발','2024 추정, 대부분 비유도']]]]}
+  };
+  Object.entries(VS).forEach(([k,d])=>{
+    ['vsd-'].forEach(pre=>{const t=document.getElementById(pre+k); if(!t)return;
+    let h='<thead><tr><th>지표</th>'+d.sides.map(x=>`<th>${x[0]}</th>`).join('')+'</tr></thead><tbody>';
+    d.rows.forEach(([lab,vals])=>{const max=Math.max(...vals.map(v=>v[0]||0));
+      h+=`<tr><td>${lab}</td>`+vals.map((v,i)=>`<td><div class="cell"><span class="val">${v[1]}</span>${v[0]!=null&&max?`<span class="vb" style="width:${Math.max(2,v[0]/max*100)}%;background:var(${d.sides[i][1]})"></span>`:''}${v[2]?`<span class="note">${v[2]}</span>`:''}</div></td>`).join('')+'</tr>';});
+    t.innerHTML=h+'</tbody>';});
+  });
+
+  // Weapon filter: war × category
+  let war='ru',cat='all';
+  function applyW(){
+    const items=[...document.querySelectorAll('#weapons [data-war]')].filter(e=>!e.classList.contains('seg-btn'));
+    const avail=new Set(items.filter(e=>e.dataset.war===war&&e.dataset.cat).map(e=>e.dataset.cat));
+    document.querySelectorAll('#cat-chips .chip-btn').forEach(x=>{const w=x.dataset.w;x.disabled=w!=='all'&&!avail.has(w);x.setAttribute('aria-pressed',w===cat);});
+    let shown=0;
+    items.forEach(e=>{const ok=e.dataset.war===war&&(!e.dataset.cat||cat==='all'||e.dataset.cat===cat);e.hidden=!ok;if(ok&&e.dataset.cat)shown++;});
+    document.getElementById('w-empty').hidden=shown>0;
+    document.querySelectorAll('.seg-btn').forEach(x=>x.setAttribute('aria-pressed',x.dataset.war===war));
+  }
+  document.querySelectorAll('.seg-btn').forEach(b=>b.addEventListener('click',()=>{war=b.dataset.war;cat='all';applyW();}));
+  document.querySelectorAll('#cat-chips .chip-btn').forEach(b=>b.addEventListener('click',()=>{cat=b.dataset.w;applyW();}));
+  applyW();
+})();
+</script>
+
+<script>
+(async()=>{try{if(!/vercel\.app$|^(?!.*claude).*$/.test(location.hostname)||location.protocol==='file:')return;
+const r=await fetch('/api/health',{cache:'no-store'});if(!r.ok)return;const d=await r.json();
+const el=document.getElementById('db-status');el.hidden=false;
+el.textContent=d.ok?`Supabase 연결됨 · 무기 지표 ${d.weapon_metrics}건`:'Supabase 연결 대기';el.style.color=d.ok?'var(--good)':'var(--warn)';}catch(e){}})();
+</script></body></html>
